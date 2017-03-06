@@ -10,13 +10,20 @@ function! bibsearch#Doi2Bib()
 endfunction
 
 " Search philpapers.org, and return structured list of items.
-function! bibsearch#BibSearch()
-	let s:query = input("Search Query: ")
-	let s:query = matchstr(s:query, '^\s*\zs.\{-}\ze\s*$')  " Strip off spaces
+function! bibsearch#BibSearch( ... )
+	let s:query = join(a:000, '+')
+	if s:query == ''
+		let s:query = input("Search Query: ")
+		let s:query = matchstr(s:query, '^\s*\zs.\{-}\ze\s*$')  " Strip off spaces
+		if s:query == ''
+			echohl Comment
+			echom 'Search canceled.'
+			echohl None
+			return
+		endif
+	endif
 	let s:query = substitute(s:query, '\s\+', '\\%20', 'g')
-	"let s:htmlText = execute('!curl -s "https://search.crossref.org/?q=' . s:query . '"')
 	let s:htmlText = execute('!curl -s "https://philpapers.org/s/' . s:query . '"')
-	"let s:htmlText = substitute(s:htmlText, '\_.*\(<table>\_.*<\/table>\)\_.*', '\1', '')
 	let s:htmlText = substitute(s:htmlText, '\_.*\(<ol.\{-}<\/ol>\)\_.*', '\1', '')
 	let s:htmlText = substitute(s:htmlText, '', '', 'g')
 	let s:htmlText = substitute(s:htmlText, '<li id=\_[^>]*>', '<li>', 'g')
@@ -30,7 +37,6 @@ function! bibsearch#BibSearch()
 	let s:htmlText = substitute(s:htmlText, '<a\s*rel="nofollow"[^\n]*dx\.doi\.org%2F\([^"]*\)"[^\n]*<\/a>', '%%%DOI: \1%%%', 'g')
 	let s:htmlText = substitute(s:htmlText, '<a\s*rel="nofollow"[^\n]*www\.jstor\.org%2F\([^"]*\)"[^\n]*<\/a>', '%%%J-Stor: http://www.jstor.org/\1%%%', 'g')
 	let s:htmlText = substitute(s:htmlText, '<a\s*target=''_blank''[^>]*>\(.\{-}\)<\/a>', '\1', 'g')
-	"let s:htmlText = substitute(s:htmlText, '%%%[^%]*$', '%%%', 'g')
 	let @o = s:htmlText
 	silent put o
 	silent 0,$!pandoc -f html -t markdown --wrap=none

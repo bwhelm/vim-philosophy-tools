@@ -3,4 +3,4 @@
 " ============================================================================
 
 command! Doi2Bib :call bibsearch#Doi2Bib()
-command! BibSearch :call bibsearch#BibSearch()
+command! -nargs=* BibSearch :call bibsearch#BibSearch(<q-args>)
