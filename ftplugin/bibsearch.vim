@@ -7,6 +7,18 @@ function! s:getAbstract(abstractLine)
 	endif
 endfunction
 
+function! s:OpenUrl()
+	" This will search current buffer for a `doi` or `URL` field and then open
+	" a browser to the relevant web address.
+	if search('^\s*doi = {')
+		let s:doi = getline('.')[8:-3]
+		silent execute '!open http://doi.org/' . s:doi
+	elseif search('^\s*url = {')
+		let s:url = getline('.')[8:-3]
+		silent execute '!open ' . s:url
+	endif
+endfunction
+
 function! s:DisplayBibTeX(url, abstract)
     split
     enew
@@ -16,7 +28,8 @@ function! s:DisplayBibTeX(url, abstract)
 	setlocal bufhidden=wipe
     execute 'read !curl -sL "' . a:url . '"'
 	silent normal! ggdd
-	if a:abstract != ''
+	" Add abstract from philpapers.org only if there is not one already
+	if a:abstract != '' && !search('^\s*abstract = {', 'n')
 		call append(1, '    abstract = {' . a:abstract . '},')
 	endif
 	try
@@ -25,14 +38,48 @@ function! s:DisplayBibTeX(url, abstract)
 	catch /^Vim\%((\a\+)\)\=:E486/
 	endtry
 	silent set filetype=tex
-	silent normal! yG
+	" Break undo sequence
+	execute "normal! i\<C-G>u\<Esc>"
+	" Substitute month numbers for month names
+	if search('^\s*month = {')
+		silent! substitute/jan/1/
+		silent! substitute/feb/2/
+		silent! substitute/mar/3/
+		silent! substitute/apr/4/
+		silent! substitute/may/5/
+		silent! substitute/jun/6/
+		silent! substitute/jul/7/
+		silent! substitute/aug/8/
+		silent! substitute/sep/9/
+		silent! substitute/oct/10/
+		silent! substitute/nov/11/
+		silent! substitute/dec/12/
+	endif
+	" Ensure N-dashes are used between numbers in `pages` field
+	if search('^\s*pages = {')
+		silent! substitute/\(\d\)-\(\d\)/\1--\2/
+	endif
+	" Don't have both `doi` and `url` fields when `url` field points to doi
+	silent! g/^\s*doi =.*\n\s*url.*doi\.org/+d
+	" Delete `publisher` field if it's a journal
+	if search('^\s*journal = {', 'n')
+		silent! g/^\s*publisher = {/d
+	endif
+	" Delete ISSN field
+	silent! g/^\s*issn = {/d
+	" Ensure titlecase for titles
+	if search('^\s*title = {')
+		normal! f{l
+		" FIXME: the below depends on my mappings -- it's likely to break!
+		normal ,tci}
+	endif
+	" Go to top and yank all text
+	silent normal! ggyG
+	" Set up mapping for BibTeX preview window to jump to url
+	nnoremap <buffer> <C-b> :call <SID>OpenUrl()<CR>
 endfunction
 
 function! s:GetBibTeX()
-	" TODO: Perhaps I also want to delete the `url` field (as redundant when
-	" there's a `doi` field), and automatically clean up other fields such as
-	" `month` (converting month to number).
-	" TODO: Make sure the abstract field isn't being duplicated!
 	let s:nextItem = search('^\d\+\.\s', 'Wn')
 	normal! 2-
 	if s:nextItem == 0
