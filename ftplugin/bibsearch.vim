@@ -11,11 +11,11 @@ function! s:OpenUrl()
 	" This will search current buffer for a `doi` or `URL` field and then open
 	" a browser to the relevant web address.
 	if search('^\s*doi = {')
-		let s:doi = getline('.')[8:-3]
-		silent execute '!open http://doi.org/' . s:doi
+		let l:doi = getline('.')[8:-3]
+		silent execute '!open http://doi.org/' . l:doi
 	elseif search('^\s*url = {')
-		let s:url = getline('.')[8:-3]
-		silent execute '!open ' . s:url
+		let l:url = getline('.')[8:-3]
+		silent execute '!open ' . l:url
 	endif
 endfunction
 
@@ -32,14 +32,17 @@ function! s:DisplayBibTeX(url, abstract)
 	if a:abstract != '' && !search('^\s*abstract = {', 'n')
 		call append(1, '    abstract = {' . a:abstract . '},')
 	endif
-	try
-		%s/{\\textquotesingle}/'/g
-		%s/"\([^"]*\)"/\\mkbibquote{\1}/g
-	catch /^Vim\%((\a\+)\)\=:E486/
-	endtry
 	silent set filetype=tex
 	" Break undo sequence
 	execute "normal! i\<C-G>u\<Esc>"
+	" Fix quotes
+	silent! %s/{\\textquotesingle}/'/g
+	silent! %s/"\([^"]*\)"/\\mkbibquote{\1}/g
+	silent! %substitute/\(^\s*abstract.*\)\@<!{\\textquotedblleft}/\\makebibquote{/g
+	silent! %substitute/\(^\s*abstract.*\)\@<!{\\textquotedblright}/}/g
+	" Fix dashes
+	silent! %substitute/\(doi =|url =\)\@<!–/--/g
+	silent! %substitute/\(doi =|url =\)\@<!—/---/g
 	" Substitute month numbers for month names
 	if search('^\s*month = {')
 		silent! substitute/jan/1/
@@ -80,31 +83,31 @@ function! s:DisplayBibTeX(url, abstract)
 endfunction
 
 function! s:GetBibTeX()
-	let s:nextItem = search('^\d\+\.\s', 'Wn')
+	let l:nextItem = search('^\d\+\.\s', 'Wn')
 	normal! 2-
-	if s:nextItem == 0
-		let s:nextItem = 9999
+	if l:nextItem == 0
+		let l:nextItem = 9999
 	endif
-	let s:jstorLine = search('^\s*\*\*J-Stor:\*\*', 'Wn')
-	let s:doiLine = search('^\s*\*\*DOI:', 'Wn')
-	let s:urlLine = search('^\s*\*\*URL:', 'Wn')
+	let l:jstorLine = search('^\s*\*\*J-Stor:\*\*', 'Wn')
+	let l:doiLine = search('^\s*\*\*DOI:', 'Wn')
+	let l:urlLine = search('^\s*\*\*URL:', 'Wn')
 	normal! 2+
-	if s:jstorLine > 0 && s:jstorLine < s:nextItem
-		let s:abstract = s:getAbstract(s:jstorLine - 1)
-		let s:jstorUrl = getline(s:jstorLine)[14:-2]
-		let s:jstorContent = execute('!curl -sL ' . s:jstorUrl)
-		let s:jstorDoi = matchstr(s:jstorContent, 'data-doi="\zs[^"]*\ze"')
-        let s:url = 'http://www.jstor.org/citation/text/' . s:jstorDoi
-		call s:DisplayBibTeX(s:url, s:abstract)
-	elseif s:doiLine > 0 && s:doiLine < s:nextItem
-		let s:abstract = s:getAbstract(s:doiLine - 1)
-		let s:doi = getline(s:doiLine)[10:]
-		let s:url = 'http://api.crossref.org/works/' . s:doi . '/transform/application/x-bibtex'
-		"execute 'read !curl -sL "http://api.crossref.org/works/' . s:doi . '/transform/application/x-bibtex"'
-		call s:DisplayBibTeX(s:url, s:abstract)
-	elseif s:urlLine > 0 && s:urlLine < s:nextItem
-		let s:url = getline(s:urlLine)[11:-2]
-		execute('silent !open ' . s:url)
+	if l:jstorLine > 0 && l:jstorLine < l:nextItem
+		let l:abstract = s:getAbstract(l:jstorLine - 1)
+		let l:jstorUrl = getline(l:jstorLine)[14:-2]
+		let l:jstorContent = execute('!curl -sL ' . l:jstorUrl)
+		let l:jstorDoi = matchstr(l:jstorContent, 'data-doi="\zs[^"]*\ze"')
+        let l:url = 'http://www.jstor.org/citation/text/' . l:jstorDoi
+		call s:DisplayBibTeX(l:url, l:abstract)
+	elseif l:doiLine > 0 && l:doiLine < l:nextItem
+		let l:abstract = s:getAbstract(l:doiLine - 1)
+		let l:doi = getline(l:doiLine)[10:]
+		let l:url = 'http://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex'
+		"execute 'read !curl -sL "http://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
+		call s:DisplayBibTeX(l:url, l:abstract)
+	elseif l:urlLine > 0 && l:urlLine < l:nextItem
+		let l:url = getline(l:urlLine)[11:-2]
+		execute('silent !open ' . l:url)
 	else
 		echohl WarningMsg
 		echom 'No data found.'

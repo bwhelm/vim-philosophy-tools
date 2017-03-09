@@ -1,3 +1,10 @@
+# ============================================================================
+# BIBSEARCH.PY
+# ============================================================================
+#
+# This takes a search query, scrapes search results from http://philpapers.org,
+# and formats and prints those results.
+
 from requests import get
 from bs4 import BeautifulSoup as bs
 from sys import argv
