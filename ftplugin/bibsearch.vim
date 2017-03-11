@@ -52,6 +52,8 @@ function! s:DisplayBibTeX(url, abstract)
 	silent set filetype=tex
 	" Break undo sequence
 	execute "normal! i\<C-G>u\<Esc>"
+	" Consistent indentation
+	silent! %s/^\s\+/\t/
 	" Fix quotes
 	silent! %s/{\\textquotesingle}/'/g
 	silent! %s/"\([^"]*\)"/\\mkbibquote{\1}/g

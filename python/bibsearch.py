@@ -39,7 +39,7 @@ def printList(list):
             except:
                 item_abstract = ''
             try:
-                item_reference = item.find('div', {'class': 'options'}).find('a', {'rel': 'nofollow'})['href']
+                item_reference = item.find('div', {'class': 'options'}).find('a', {'class': '', 'rel': 'nofollow'})['href']
                 # Strip off initial philpapers.org href; use ":" and "/"
                 item_reference = item_reference[item_reference.find('http', 5):].replace('%3A', ':').replace('%2F', '/')
                 if 'jstor.org' in item_reference:
