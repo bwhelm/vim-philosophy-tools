@@ -115,7 +115,7 @@ function! s:GetBibTeX()
 	if l:jstorLine > 0 && l:jstorLine < l:nextItem
 		let l:abstract = s:getAbstract(l:jstorLine - 1)
 		let l:jstorUrl = getline(l:jstorLine)[14:-2]
-		let l:jstorContent = execute('!curl -sL ' . l:jstorUrl)
+		let l:jstorContent = system('curl -sL ' . l:jstorUrl)
 		let l:jstorDoi = matchstr(l:jstorContent, 'data-doi="\zs[^"]*\ze"')
         let l:url = 'http://www.jstor.org/citation/text/' . l:jstorDoi
 		call s:DisplayBibTeX(l:url, l:abstract)
