@@ -1,5 +1,20 @@
 scriptencoding utf-8
 
+function! s:TitleCase(text)
+	let l:exceptions = ['a', 'an', 'the', 'and', 'but', 'for', 'nor', 'or', 'so', 'yet', 'aboard', 'about', 'above', 'across', 'after', 'against', 'along', 'amid', 'among', 'around', 'as', 'at', 'atop', 'before', 'behind', 'below', 'beneath', 'beside', 'between', 'beyond', 'by', 'despite', 'down', 'during', 'for', 'from', 'in', 'inside', 'into', 'like', 'near', 'of', 'off', 'on', 'onto', 'out', 'outside', 'over', 'past', 'regarding', 'round', 'since', 'than', 'through', 'throughout', 'till', 'to', 'toward', 'under', 'unlike', 'until', 'up', 'upon', 'with', 'within', 'without']
+	let l:text = a:text
+	let l:text = substitute(l:text, '\n$', '', '')
+	let l:text = tolower(l:text)
+	let l:text = substitute(l:text, '\<.', '\u&', 'g')
+	for l:word in l:exceptions
+		let l:text = substitute(l:text, '\(^\|[:?.!] \)\@<!\<' . l:word . '\>', '\l&', 'g')
+	endfor
+	let l:text = substitute(l:text, '\<.\ze\S*$', '\u&', '')
+	let l:text = substitute(l:text, '''\zs\S', '\l&', 'g')
+	call setreg('@', l:text, getregtype('@'))
+	return l:text
+endfunction
+
 function! s:getAbstract(abstractLine)
 	" This will pull the abstract from the current item.
 	if getline(a:abstractLine) =~# '\*\*Abstract:'
@@ -32,7 +47,7 @@ function! s:DisplayBibTeX(url, abstract)
 	silent normal! ggdd
 	" Add abstract from philpapers.org only if there is not one already
 	if a:abstract !=# '' && !search('^\s*abstract = {', 'n')
-		call append(1, '    abstract = {' . a:abstract . '},')
+		call append(1, "\tabstract = {" . a:abstract . '},')
 	endif
 	silent set filetype=tex
 	" Break undo sequence
@@ -74,9 +89,10 @@ function! s:DisplayBibTeX(url, abstract)
 	silent! g/^\s*issn = {/d
 	" Ensure titlecase for titles
 	if search('^\s*title = {')
-		normal! f{l
-		" FIXME: the below depends on my mappings -- it's likely to break!
-		normal ,tci}
+		let l:title = getline('.')
+		echom l:title[9:]
+		let l:title = "\ttitle = " . <SID>TitleCase(l:title[9:])
+		call setline('.', l:title)
 	endif
 	" Go to top and yank all text
 	silent normal! ggyG
