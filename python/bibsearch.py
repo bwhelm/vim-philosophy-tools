@@ -31,9 +31,7 @@ def printList(list):
             item_name = item_citation.find('span', {'class': 'name'}).text
             item_pubYear = item_citation.find('span', {'class':
                                                        'pubYear'}).text
-            item_pubInfo = ''.join([str(tag) for tag in item.find('span',
-                {'class': 'pubInfo'})]).replace('<em class="pubName">',
-                        '*').replace('<em>', '*').replace('</em>', '*')
+            item_pubInfo = ''.join([str(tag) for tag in item.find('span', {'class': 'pubInfo'})]).replace('<em class="pubName">', '*').replace('<em>', '*').replace('</em>', '*')
             try:
                 item_abstract = item.find('div', {'class': 'abstract'}).text
                 item_abstract = item_abstract.replace(' (...)', '').replace('- ', '').replace(' (shrink)', '')

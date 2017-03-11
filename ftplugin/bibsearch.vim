@@ -1,6 +1,8 @@
+scriptencoding utf-8
+
 function! s:getAbstract(abstractLine)
 	" This will pull the abstract from the current item.
-	if getline(a:abstractLine) =~ '\*\*Abstract:'
+	if getline(a:abstractLine) =~# '\*\*Abstract:'
 		return getline(a:abstractLine)[15:]
 	else
 		return ''
@@ -29,7 +31,7 @@ function! s:DisplayBibTeX(url, abstract)
     execute 'read !curl -sL "' . a:url . '"'
 	silent normal! ggdd
 	" Add abstract from philpapers.org only if there is not one already
-	if a:abstract != '' && !search('^\s*abstract = {', 'n')
+	if a:abstract !=# '' && !search('^\s*abstract = {', 'n')
 		call append(1, '    abstract = {' . a:abstract . '},')
 	endif
 	silent set filetype=tex
