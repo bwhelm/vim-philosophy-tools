@@ -8,6 +8,7 @@
 from requests import get
 from bs4 import BeautifulSoup as bs
 from sys import argv
+from re import sub, IGNORECASE
 
 query = '%20'.join(argv[1:])
 
@@ -49,10 +50,12 @@ def printList(list):
                 elif item_reference == 'w':
                     item_reference = ''
                 else:
-                    item_reference = '\t**URL:** <' + item_reference + '>\n'
-                    # Here is philpapers.org's BibTeX page; may want to scrape it....
+                    item_reference = sub('%3f', '?', item_reference, flags=IGNORECASE)
+                    item_reference = sub('%3d', '=', item_reference, flags=IGNORECASE)
+                    item_reference = sub('%26', '&', item_reference, flags=IGNORECASE)
+                    # philpapers.org's BibTeX page
                     item_bibtex = 'https://philpapers.org/export.html?__format=bib&eId=' + item_id + '&formatName=BibTeX'
-                    item_reference += '\t**PP:** <' + item_bibtex + '>\n'
+                    item_reference = '\t**PP:** <' + item_bibtex + '>\n' + '\t**URL:** <' + item_reference + '>\n'
             except:
                 item_reference = ''
             # Now construct the reference the way I want it....

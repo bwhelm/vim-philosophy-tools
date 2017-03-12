@@ -32,19 +32,21 @@ function! s:OpenUrl()
 		silent execute '!open http://doi.org/' . l:doi
 	elseif search('^\s*url = {')
 		let l:url = getline('.')[8:-3]
-		silent execute '!open ' . l:url
+		echom l:url
+		silent execute '!open "' . l:url . '"'
 	endif
 endfunction
 
-function! s:DisplayBibTeX(url, abstract)
+function! s:DisplayBibTeX(text, abstract)
     split
     enew
     resize 14
     setlocal nowrap
 	setlocal buftype=nofile
 	setlocal bufhidden=wipe
-    execute 'read !curl -sL "' . a:url . '"'
-	silent normal! ggdd
+	let l:textList = split(a:text, '\n')
+	call append(0, l:textList)
+	silent normal! gg
 	" Add abstract from philpapers.org only if there is not one already
 	if a:abstract !=# '' && !search('^\s*abstract = {', 'n')
 		call append(1, "\tabstract = {" . a:abstract . '},')
@@ -53,33 +55,33 @@ function! s:DisplayBibTeX(url, abstract)
 	" Break undo sequence
 	execute "normal! i\<C-G>u\<Esc>"
 	" Consistent indentation
-	silent! %s/^\s\+/\t/
+	%s/^\s\+/\t/e
 	" Fix quotes
-	silent! %s/{\\textquotesingle}/'/g
-	silent! %s/"\([^"]*\)"/\\mkbibquote{\1}/g
-	silent! %substitute/\(^\s*abstract.*\)\@<!{\\textquotedblleft}/\\makebibquote{/g
-	silent! %substitute/\(^\s*abstract.*\)\@<!{\\textquotedblright}/}/g
+	%s/{\\textquotesingle}/'/ge
+	%s/\(^\s*abstract.*\)\@<!"\([^"]*\)"/\\mkbibquote{\2}/gie
+	%substitute/\(^\s*abstract.*\)\@<!{\\textquotedblleft}/\\mkbibquote{/ge
+	%substitute/\(^\s*abstract.*\)\@<!{\\textquotedblright}/}/ge
 	" Fix dashes
-	silent! %substitute/\(doi =|url =\)\@<!–/--/g
-	silent! %substitute/\(doi =|url =\)\@<!—/---/g
+	%substitute/\(doi =|url =\)\@<!–/--/ge
+	%substitute/\(doi =|url =\)\@<!—/---/ge
 	" Substitute month numbers for month names
 	if search('^\s*month = {')
-		silent! substitute/jan/1/
-		silent! substitute/feb/2/
-		silent! substitute/mar/3/
-		silent! substitute/apr/4/
-		silent! substitute/may/5/
-		silent! substitute/jun/6/
-		silent! substitute/jul/7/
-		silent! substitute/aug/8/
-		silent! substitute/sep/9/
-		silent! substitute/oct/10/
-		silent! substitute/nov/11/
-		silent! substitute/dec/12/
+		substitute/jan/1/e
+		substitute/feb/2/e
+		substitute/mar/3/e
+		substitute/apr/4/e
+		substitute/may/5/e
+		substitute/jun/6/e
+		substitute/jul/7/e
+		substitute/aug/8/e
+		substitute/sep/9/e
+		substitute/oct/10/e
+		substitute/nov/11/e
+		substitute/dec/12/e
 	endif
 	" Ensure N-dashes are used between numbers in `pages` field
 	if search('^\s*pages = {')
-		silent! substitute/\(\d\)-\(\d\)/\1--\2/
+		substitute/\(\d\)-\(\d\)/\1--\2/e
 	endif
 	" Don't have both `doi` and `url` fields when `url` field points to doi
 	silent! g/^\s*doi =.*\n\s*url.*doi\.org/+d
@@ -92,7 +94,6 @@ function! s:DisplayBibTeX(url, abstract)
 	" Ensure titlecase for titles
 	if search('^\s*title = {')
 		let l:title = getline('.')
-		echom l:title[9:]
 		let l:title = "\ttitle = " . <SID>TitleCase(l:title[9:])
 		call setline('.', l:title)
 	endif
@@ -110,6 +111,7 @@ function! s:GetBibTeX()
 	endif
 	let l:jstorLine = search('^\s*\*\*J-Stor:\*\*', 'Wn')
 	let l:doiLine = search('^\s*\*\*DOI:', 'Wn')
+	let l:ppLine = search('^\s*\*\*PP:\*\*', 'Wn')
 	let l:urlLine = search('^\s*\*\*URL:', 'Wn')
 	normal! 2+
 	if l:jstorLine > 0 && l:jstorLine < l:nextItem
@@ -118,16 +120,26 @@ function! s:GetBibTeX()
 		let l:jstorContent = system('curl -sL ' . l:jstorUrl)
 		let l:jstorDoi = matchstr(l:jstorContent, 'data-doi="\zs[^"]*\ze"')
         let l:url = 'http://www.jstor.org/citation/text/' . l:jstorDoi
-		call s:DisplayBibTeX(l:url, l:abstract)
+		let l:text = system('curl -sL "' . l:url . '"')
+		call s:DisplayBibTeX(l:text, l:abstract)
 	elseif l:doiLine > 0 && l:doiLine < l:nextItem
 		let l:abstract = s:getAbstract(l:doiLine - 1)
 		let l:doi = getline(l:doiLine)[10:]
 		let l:url = 'http://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex'
-		"execute 'read !curl -sL "http://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
-		call s:DisplayBibTeX(l:url, l:abstract)
+		let l:text = system('curl -sL "' . l:url . '"')
+		call s:DisplayBibTeX(l:text, l:abstract)
+	elseif l:ppLine > 0 && l:ppLine < l:nextItem
+		let l:abstract = s:getAbstract(l:ppLine - 1)
+		let l:ppUrl = getline(l:ppLine)[10:-2]
+		let l:text = system('curl -sL "' . l:ppUrl . '"')
+		let l:text = substitute(l:text, '.*<pre class=''export''>\(@.*\)\n</pre>\_.*', '\1', '')
+		call s:DisplayBibTeX(l:text, l:abstract)
 	elseif l:urlLine > 0 && l:urlLine < l:nextItem
 		let l:url = getline(l:urlLine)[11:-2]
-		execute('silent !open ' . l:url)
+		let l:url = substitute(l:url, '%3f', '?', 'g')
+		let l:url = substitute(l:url, '%3d', '=', 'g')
+		let l:url = substitute(l:url, '%26', '\&', 'g')
+		execute('silent !open "' . l:url . '"')
 	else
 		echohl WarningMsg
 		echom 'No data found.'
