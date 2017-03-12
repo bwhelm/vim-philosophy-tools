@@ -1,5 +1,5 @@
 # ============================================================================
-# BIBSEARCH.PY
+# PHILPAPERSSEARCH.PY
 # ============================================================================
 #
 # This takes a search query, scrapes search results from http://philpapers.org,

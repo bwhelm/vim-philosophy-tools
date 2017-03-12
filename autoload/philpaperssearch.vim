@@ -3,17 +3,17 @@
 " ============================================================================
 
 " Path to python file that scrapes search data from philpapers.org
-let s:pythonPath = expand('<sfile>:p:h:h') . '/python/bibsearch.py'
+let s:pythonPath = expand('<sfile>:p:h:h') . '/python/philpaperssearch.py'
 
 " Download bibtex citation info from DOI
-function! bibsearch#Doi2Bib()
+function! philpaperssearch#Doi2Bib()
 	let l:doi = input('DOI: ')
 	let l:doi = matchstr(l:doi, '^\s*\zs\S*\ze\s*$')  " Strip off spaces
 	execute 'silent read !curl -s "http://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
 endfunction
 
 " Search philpapers.org, and return structured list of items.
-function! bibsearch#BibSearch( ... )
+function! philpaperssearch#PhilpapersSearch( ... )
 	let l:query = join(a:000, '\\%20')
 	if l:query ==# ''
 		let l:query = input('Search Query: ')
@@ -30,6 +30,6 @@ function! bibsearch#BibSearch( ... )
 	let l:formattedList = split(l:formattedText, '\n')
 	call append(0, l:formattedList)
 	normal! gg
-	silent set filetype=bibsearch
+	silent set filetype=ppsearch
 	silent set syntax=pandoc
 endfunction
