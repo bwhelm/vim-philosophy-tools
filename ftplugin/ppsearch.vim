@@ -38,12 +38,11 @@ function! s:OpenUrl()
 endfunction
 
 function! s:DisplayBibTeX(text, abstract)
-    split
-    enew
-    resize 14
-    setlocal nowrap
+	pedit BibTeX.bib
+	wincmd P
+	resize 13
 	setlocal buftype=nofile
-	setlocal bufhidden=wipe
+    setlocal nowrap
 	let l:textList = split(a:text, '\n')
 	call append(0, l:textList)
 	silent normal! gg
@@ -51,7 +50,6 @@ function! s:DisplayBibTeX(text, abstract)
 	if a:abstract !=# '' && !search('^\s*abstract = {', 'n')
 		call append(1, "\tabstract = {" . a:abstract . '},')
 	endif
-	silent set filetype=tex
 	" Break undo sequence
 	execute "normal! i\<C-G>u\<Esc>"
 	" Consistent indentation
@@ -97,8 +95,8 @@ function! s:DisplayBibTeX(text, abstract)
 		let l:title = "\ttitle = " . <SID>TitleCase(l:title[9:])
 		call setline('.', l:title)
 	endif
-	" Go to top and yank all text
-	silent normal! ggyG
+	" Delete last (empty) line, go to top, and yank all text
+	silent normal! GddggyG
 	" Set up mapping for BibTeX preview window to jump to url
 	nnoremap <buffer> <C-b> :call <SID>OpenUrl()<CR>
 endfunction
