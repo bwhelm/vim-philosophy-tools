@@ -53,10 +53,10 @@ function! s:DisplayBibTeX(text, abstract)
 	" Break undo sequence
 	execute "normal! i\<C-G>u\<Esc>"
 	" Consistent indentation
-	%s/^\s\+/\t/e
+	%substitute/^\s\+/\t/e
 	" Fix quotes
-	%s/{\\textquotesingle}/'/ge
-	%s/\(^\s*abstract.*\)\@<!"\([^"]*\)"/\\mkbibquote{\2}/gie
+	%substitute/{\\textquotesingle}/'/ge
+	%substitute/\(^\s*abstract.*\)\@<!"\([^"]*\)"/\\mkbibquote{\2}/gie
 	%substitute/\(^\s*abstract.*\)\@<!{\\textquotedblleft}/\\mkbibquote{/ge
 	%substitute/\(^\s*abstract.*\)\@<!{\\textquotedblright}/}/ge
 	" Fix dashes

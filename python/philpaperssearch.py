@@ -32,17 +32,29 @@ def printList(list):
             item_name = item_citation.find('span', {'class': 'name'}).text
             item_pubYear = item_citation.find('span', {'class':
                                                        'pubYear'}).text
-            item_pubInfo = ''.join([str(tag) for tag in item.find('span', {'class': 'pubInfo'})]).replace('<em class="pubName">', '*').replace('<em>', '*').replace('</em>', '*')
+            item_pubInfo = ''.join([str(tag) for tag in
+                                   item.find('span', {'class': 'pubInfo'})]) \
+                .replace('<em class="pubName">', '*') \
+                .replace('<em>', '*') \
+                .replace('</em>', '*')
             try:
                 item_abstract = item.find('div', {'class': 'abstract'}).text
-                item_abstract = item_abstract.replace(' (...)', '').replace('- ', '').replace(' (shrink)', '')
+                item_abstract = item_abstract.replace(' (...)', '') \
+                                             .replace('- ', '') \
+                                             .replace(' (shrink)', '')
+                # Substitution below to prevent spurious italics/boldface in
+                # markdown.
+                item_abstract = item_abstract.replace('_', '')
                 item_abstract = '\t**Abstract:** ' + item_abstract + '\n'
             except:
                 item_abstract = ''
             try:
-                item_reference = item.find('div', {'class': 'options'}).find('a', {'class': '', 'rel': 'nofollow'})['href']
+                item_reference = item.find('div', {'class': 'options'}) \
+                        .find('a', {'class': '', 'rel': 'nofollow'})['href']
                 # Strip off initial philpapers.org href; use ":" and "/"
-                item_reference = item_reference[item_reference.find('http', 5):].replace('%3A', ':').replace('%2F', '/')
+                item_reference = \
+                    item_reference[item_reference.find('http', 5):] \
+                    .replace('%3A', ':').replace('%2F', '/')
                 if 'jstor.org' in item_reference:
                     item_reference = '\t**J-Stor:** <' + item_reference + '>\n'
                 elif 'doi.org' in item_reference:
@@ -50,12 +62,18 @@ def printList(list):
                 elif item_reference == 'w':
                     item_reference = ''
                 else:
-                    item_reference = sub('%3f', '?', item_reference, flags=IGNORECASE)
-                    item_reference = sub('%3d', '=', item_reference, flags=IGNORECASE)
-                    item_reference = sub('%26', '&', item_reference, flags=IGNORECASE)
+                    item_reference = sub('%3f', '?', item_reference,
+                                         flags=IGNORECASE)
+                    item_reference = sub('%3d', '=', item_reference,
+                                         flags=IGNORECASE)
+                    item_reference = sub('%26', '&', item_reference,
+                                         flags=IGNORECASE)
                     # philpapers.org's BibTeX page
-                    item_bibtex = 'https://philpapers.org/export.html?__format=bib&eId=' + item_id + '&formatName=BibTeX'
-                    item_reference = '\t**PP:** <' + item_bibtex + '>\n' + '\t**URL:** <' + item_reference + '>\n'
+                    item_bibtex = 'https://philpapers.org/export.html?' \
+                                  + '__format=bib&eId=' + item_id \
+                                  + '&formatName=BibTeX'
+                    item_reference = '\t**PP:** <' + item_bibtex + '>\n' \
+                                     + '\t**URL:** <' + item_reference + '>\n'
             except:
                 item_reference = ''
             # Now construct the reference the way I want it....
