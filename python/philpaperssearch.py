@@ -24,19 +24,38 @@ def printList(list):
     for item in list.contents:
         if item != '\n':  # Note: every other item is '\n'
             counter += 1
-            item_id = item['id'][1:]
-            item_citation = item.find('span', {'class': 'citation'})
-            item_title = item_citation.find('span',
-                                            {'class':
-                                             'articleTitle recTitle'}).text
-            item_name = item_citation.find('span', {'class': 'name'}).text
-            item_pubYear = item_citation.find('span', {'class':
-                                                       'pubYear'}).text
-            item_pubInfo = ''.join([str(tag) for tag in
-                                   item.find('span', {'class': 'pubInfo'})]) \
-                .replace('<em class="pubName">', '*') \
-                .replace('<em>', '*') \
-                .replace('</em>', '*')
+            try:
+                item_id = item['id'][1:]
+            except:
+                item_id = ''
+            try:
+                item_citation = item.find('span', {'class': 'citation'})
+            except:
+                item_citation = ''
+            try:
+                item_title = item_citation.find('span',
+                                                {'class':
+                                                 'articleTitle recTitle'}).text
+            except:
+                item_title = ''
+            try:
+                item_name = item_citation.find('span', {'class': 'name'}).text
+            except:
+                item_name = ''
+            try:
+                item_pubYear = item_citation.find('span', {'class':
+                                                  'pubYear'}).text
+            except:
+                item_pubYear = ''
+            try:
+                item_pubInfo = ''.join([str(tag) for tag in
+                                       item.find('span',
+                                                 {'class': 'pubInfo'})]) \
+                    .replace('<em class="pubName">', '*') \
+                    .replace('<em>', '*') \
+                    .replace('</em>', '*')
+            except:
+                item_pubInfo = ''
             try:
                 item_abstract = item.find('div', {'class': 'abstract'}).text
                 item_abstract = item_abstract.replace(' (...)', '') \

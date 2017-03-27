@@ -11,6 +11,8 @@ function! s:TitleCase(text)
 	endfor
 	let l:text = substitute(l:text, '\<.\ze\S*$', '\u&', '')
 	let l:text = substitute(l:text, '''\zs\S', '\l&', 'g')
+    let l:text = substitute(l:text, '{\\textemdash}', '---', 'g')
+    let l:text = substitute(l:text, '^{.', '\U&', '')  " capitalize first letter
 	call setreg('@', l:text, getregtype('@'))
 	return l:text
 endfunction
