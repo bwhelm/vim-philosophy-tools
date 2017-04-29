@@ -10,5 +10,5 @@ This vim plugin exposes two commands:
   will attempt to download BibTeX citation info from an available DOI (using
   `crossref.org`) or from J-Stor.
 
-Note that this is highly dependant on the webpage returned from
+Note that this is highly dependent on the webpage returned from
 `philpapers.org`.
