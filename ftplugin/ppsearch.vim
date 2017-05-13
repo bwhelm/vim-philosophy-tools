@@ -66,6 +66,8 @@ function! s:DisplayBibTeX(text, abstract)
 	silent %substitute/\(^\s*abstract.*\)\@<!{\\textquotedblleft}/\\mkbibquote{/ge
 	silent %substitute/\(^\s*abstract.*\)\@<!{\\textquotedblright}/}/ge
 	" Fix dashes
+    silent %substitute/{\\textemdash}/---/ge
+    silent %substitute/{\\textendash}/--/ge
 	silent %substitute/\(doi =|url =\)\@<!–/--/ge
 	silent %substitute/\(doi =|url =\)\@<!—/---/ge
 	" Substitute month numbers for month names
@@ -116,7 +118,7 @@ endfunction
 
 function! s:GetBibTeX()
 	let l:nextItem = search('^\d\+\.\s', 'Wn')
-	silent -2
+	silent! -2
 	if l:nextItem == 0
 		let l:nextItem = 9999
 	endif
@@ -124,7 +126,7 @@ function! s:GetBibTeX()
 	let l:doiLine = search('^\s*\*\*DOI:', 'Wn')
 	let l:ppLine = search('^\s*\*\*PP:\*\*', 'Wn')
 	let l:urlLine = search('^\s*\*\*URL:', 'Wn')
-	+2
+	silent! +2
 	" Note: J-Stor seems to require a real web browser. I'm working around
 	" this by spoofing headers with l:curlOpt. (Adding this into DOI/PP/URL
 	" searches as well, just in case they change.)
