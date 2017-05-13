@@ -85,9 +85,11 @@ function! s:DisplayBibTeX(text, abstract)
 	endif
 	" Make sure years are in curly braces
 	silent %substitute/year = \(\d\+\),/year = {\1},/ge
-	" Ensure N-dashes are used between numbers in `pages` field
 	if search('^\s*pages = {')
+        " Ensure N-dashes are used between numbers in `pages` field
 		silent substitute/\(\d\)-\(\d\)/\1--\2/e
+        " Compresss page ranges
+        silent substitute/\(\d\+\)\(\d\d\)--\1\(\d\d\)/\1\2--\3/e
 	endif
 	" Don't have both `doi` and `url` fields when `url` field points to doi
 	silent! global/^\s*doi =.*\n\s*url.*doi\.org/+d
