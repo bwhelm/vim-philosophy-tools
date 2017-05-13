@@ -10,6 +10,8 @@ function! philpaperssearch#Doi2Bib()
 	let l:doi = input('DOI: ')
 	let l:doi = matchstr(l:doi, '^\s*\zs\S*\ze\s*$')  " Strip off spaces
 	execute 'silent read !curl -s "http://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
+	" Because we need the year in curly braces....
+	%substitute/year = \(\d\+\),/year = {\1},/ge
 endfunction
 
 " Search philpapers.org, and return structured list of items.
@@ -29,7 +31,7 @@ function! philpaperssearch#PhilpapersSearch( ... )
 	let l:formattedText = system('python ' . s:pythonPath . ' ' . l:query)
 	let l:formattedList = split(l:formattedText, '\n')
 	call append(0, l:formattedList)
-	normal! gg
+	0
 	silent set filetype=ppsearch
 	silent set syntax=pandoc
 endfunction

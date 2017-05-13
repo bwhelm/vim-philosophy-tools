@@ -46,8 +46,8 @@ function! s:DisplayBibTeX(text, abstract)
 	setlocal buftype=nofile
     setlocal nowrap
 	let l:textList = split(a:text, '\n')
-	call append(0, l:textList)
-	silent normal! gg
+	silent call append(0, l:textList)
+	0
 	" Add abstract from philpapers.org only if there is not one already
 	if a:abstract !=# '' && !search('^\s*abstract = {', 'n')
 		call append(1, "\tabstract = {" . a:abstract . '},')
@@ -55,57 +55,62 @@ function! s:DisplayBibTeX(text, abstract)
 	" Break undo sequence
 	execute "normal! i\<C-G>u\<Esc>"
 	" Consistent indentation
-	%substitute/^\s\+/\t/e
+	silent %substitute/^\s\+/\t/e
 	" Fix quotes
-	%substitute/{\\textquotesingle}/'/ge
-	%substitute/\(^\s*abstract.*\)\@<!"\([^"]*\)"/\\mkbibquote{\2}/gie
-	%substitute/\(^\s*abstract.*\)\@<!{\\textquotedblleft}/\\mkbibquote{/ge
-	%substitute/\(^\s*abstract.*\)\@<!{\\textquotedblright}/}/ge
+	silent %substitute/{\\textquotesingle}/'/ge
+	silent %substitute/\(^\s*abstract.*\)\@<!"\([^"]*\)"/\\mkbibquote{\2}/gie
+	silent %substitute/\(^\s*abstract.*\)\@<!{\\textquotedblleft}/\\mkbibquote{/ge
+	silent %substitute/\(^\s*abstract.*\)\@<!{\\textquotedblright}/}/ge
 	" Fix dashes
-	%substitute/\(doi =|url =\)\@<!–/--/ge
-	%substitute/\(doi =|url =\)\@<!—/---/ge
+	silent %substitute/\(doi =|url =\)\@<!–/--/ge
+	silent %substitute/\(doi =|url =\)\@<!—/---/ge
 	" Substitute month numbers for month names
 	if search('^\s*month = {')
-		substitute/jan/1/e
-		substitute/feb/2/e
-		substitute/mar/3/e
-		substitute/apr/4/e
-		substitute/may/5/e
-		substitute/jun/6/e
-		substitute/jul/7/e
-		substitute/aug/8/e
-		substitute/sep/9/e
-		substitute/oct/10/e
-		substitute/nov/11/e
-		substitute/dec/12/e
+		silent substitute/jan/1/e
+		silent substitute/feb/2/e
+		silent substitute/mar/3/e
+		silent substitute/apr/4/e
+		silent substitute/may/5/e
+		silent substitute/jun/6/e
+		silent substitute/jul/7/e
+		silent substitute/aug/8/e
+		silent substitute/sep/9/e
+		silent substitute/oct/10/e
+		silent substitute/nov/11/e
+		silent substitute/dec/12/e
 	endif
+	" Make sure years are in curly braces
+	silent %substitute/year = \(\d\+\),/year = {\1},/ge
 	" Ensure N-dashes are used between numbers in `pages` field
 	if search('^\s*pages = {')
-		substitute/\(\d\)-\(\d\)/\1--\2/e
+		silent substitute/\(\d\)-\(\d\)/\1--\2/e
 	endif
 	" Don't have both `doi` and `url` fields when `url` field points to doi
-	silent! g/^\s*doi =.*\n\s*url.*doi\.org/+d
+	silent! global/^\s*doi =.*\n\s*url.*doi\.org/+d
 	" Delete `publisher` field if it's a journal
 	if search('^\s*journal = {', 'n')
-		silent! g/^\s*publisher = {/d
+		silent! global/^\s*publisher = {/d
 	endif
 	" Delete ISSN field
-	silent! g/^\s*issn = {/d
+	silent! global/^\s*issn = {/d
 	" Ensure titlecase for titles
 	if search('^\s*title = {')
 		let l:title = getline('.')
 		let l:title = "\ttitle = " . <SID>TitleCase(l:title[9:])
-		call setline('.', l:title)
+		silent call setline('.', l:title)
 	endif
 	" Delete last (empty) line, go to top, and yank all text
-	silent normal! GddggyG
+	silent $delete_
+	silent 0,$yank *
+	0
 	" Set up mapping for BibTeX preview window to jump to url
 	nnoremap <buffer> <C-b> :call <SID>OpenUrl()<CR>
+	nnoremap <buffer> q :quit!<CR>
 endfunction
 
 function! s:GetBibTeX()
 	let l:nextItem = search('^\d\+\.\s', 'Wn')
-	normal! 2-
+	silent -2
 	if l:nextItem == 0
 		let l:nextItem = 9999
 	endif
@@ -113,25 +118,33 @@ function! s:GetBibTeX()
 	let l:doiLine = search('^\s*\*\*DOI:', 'Wn')
 	let l:ppLine = search('^\s*\*\*PP:\*\*', 'Wn')
 	let l:urlLine = search('^\s*\*\*URL:', 'Wn')
-	normal! 2+
+	+2
+	" Note: J-Stor seems to require a real web browser. I'm working around
+	" this by spoofing headers with l:curlOpt. (Adding this into DOI/PP/URL
+	" searches as well, just in case they change.)
+	let l:curlOpt = '-sL '
+				\ . '-H "user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5)" '
+				\ . '-H "accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" '
+				\ . '-H "accept-charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3" '
+				\ . '-H "accept-language: en-US,en;q=0.8" '
 	if l:jstorLine > 0 && l:jstorLine < l:nextItem
 		let l:abstract = s:getAbstract(l:jstorLine - 1)
 		let l:jstorUrl = getline(l:jstorLine)[14:-2]
-		let l:jstorContent = system('curl -sL ' . l:jstorUrl)
+		let l:jstorContent = system('curl ' . l:curlOpt . ' "' . l:jstorUrl . '"')
 		let l:jstorDoi = matchstr(l:jstorContent, 'data-doi="\zs[^"]*\ze"')
         let l:url = 'http://www.jstor.org/citation/text/' . l:jstorDoi
-		let l:text = system('curl -sL "' . l:url . '"')
+		let l:text = system('curl ' . l:curlOpt . ' "' . l:url . '"')
 		call s:DisplayBibTeX(l:text, l:abstract)
 	elseif l:doiLine > 0 && l:doiLine < l:nextItem
 		let l:abstract = s:getAbstract(l:doiLine - 1)
 		let l:doi = getline(l:doiLine)[10:]
 		let l:url = 'http://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex'
-		let l:text = system('curl -sL "' . l:url . '"')
+		let l:text = system('curl ' . l:curlOpt . ' "' . l:url . '"')
 		call s:DisplayBibTeX(l:text, l:abstract)
 	elseif l:ppLine > 0 && l:ppLine < l:nextItem
 		let l:abstract = s:getAbstract(l:ppLine - 1)
 		let l:ppUrl = getline(l:ppLine)[10:-2]
-		let l:text = system('curl -sL "' . l:ppUrl . '"')
+		let l:text = system('curl ' . l:curlOpt . ' "' . l:ppUrl . '"')
 		let l:text = substitute(l:text, '.*<pre class=''export''>\(@.*\)\n</pre>\_.*', '\1', '')
 		call s:DisplayBibTeX(l:text, l:abstract)
 	elseif l:urlLine > 0 && l:urlLine < l:nextItem
