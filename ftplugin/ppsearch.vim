@@ -4,13 +4,17 @@ function! s:TitleCase(text)
 	let l:exceptions = ['a', 'an', 'the', 'and', 'but', 'for', 'nor', 'or', 'so', 'yet', 'aboard', 'about', 'above', 'across', 'after', 'against', 'along', 'amid', 'among', 'around', 'as', 'at', 'atop', 'before', 'behind', 'below', 'beneath', 'beside', 'between', 'beyond', 'by', 'despite', 'down', 'during', 'for', 'from', 'in', 'inside', 'into', 'like', 'near', 'of', 'off', 'on', 'onto', 'out', 'outside', 'over', 'past', 'regarding', 'round', 'since', 'than', 'through', 'throughout', 'till', 'to', 'toward', 'under', 'unlike', 'until', 'up', 'upon', 'with', 'within', 'without']
 	let l:text = a:text
 	let l:text = substitute(l:text, '\n$', '', '')
-	let l:text = tolower(l:text)
-	let l:text = substitute(l:text, '\<.', '\u&', 'g')
+    "" Make lowercase all letters---too radical: trust existing uppercase
+	""let l:text = tolower(l:text)
+    " " Make uppercase all new words, but not changing letters following '{' or '}'
+	" let l:text = substitute(l:text, '[{}]\@<!\<.', '\u&', 'g')
+    " Make uppercase all characters after spaces or dashes
+    let l:text = substitute(l:text, '[ -"(]\zs\S', '\u&', 'g')
 	for l:word in l:exceptions
 		let l:text = substitute(l:text, '\(^\|[:?.!] \)\@<!\<' . l:word . '\>', '\l&', 'g')
 	endfor
-	let l:text = substitute(l:text, '\<.\ze\S*$', '\u&', '')
-	let l:text = substitute(l:text, '''\zs\S', '\l&', 'g')
+	"let l:text = substitute(l:text, '\<.\ze\S*$', '\u&', '')
+	let l:text = substitute(l:text, '\S''\zs\S', '\l&', 'g')  " lowercase contractions
     let l:text = substitute(l:text, '{\\textemdash}', '---', 'g')
     let l:text = substitute(l:text, '^{.', '\U&', '')  " capitalize first letter
 	call setreg('@', l:text, getregtype('@'))
@@ -104,8 +108,8 @@ function! s:DisplayBibTeX(text, abstract)
 	silent 0,$yank *
 	0
 	" Set up mapping for BibTeX preview window to jump to url
-	nnoremap <buffer> <C-b> :call <SID>OpenUrl()<CR>
-	nnoremap <buffer> q :quit!<CR>
+	nnoremap <silent><buffer> <C-b> :call <SID>OpenUrl()<CR>
+	nnoremap <silent><buffer> q :quit!<CR>
 endfunction
 
 function! s:GetBibTeX()
@@ -162,5 +166,5 @@ function! s:GetBibTeX()
 endfunction
 
 nnoremap <silent> <buffer> <CR> :call <SID>GetBibTeX()<CR>
-nnoremap <buffer> <C-n> /^\d\+\.\s<CR>zz
-nnoremap <buffer> <C-p> ?^\d\+\.\s<CR>zz
+nnoremap <silent><buffer> <C-n> /^\d\+\.\s<CR>zz
+nnoremap <silent><buffer> <C-p> ?^\d\+\.\s<CR>zz
