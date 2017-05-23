@@ -38,10 +38,9 @@ function! philpaperssearch#PhilpapersSearch( ... )
 endfunction
 
 " Get markdown file from SEP
-function! philpaperssearch#SEPtoMarkdown( ... )
-	let l:entry = join(a:000, '')
-	let l:file = fnamemodify(g:PhilPapersSearch#sep_tempfile, ':p')
-	execute '!' . g:PhilPapersSearch#sep_offprint . ' --output ' . l:file . ' --md ' . l:entry
+function! philpaperssearch#SEPtoMarkdown(entry)
+	let l:file = fnamemodify(g:PhilPapersSearch#sep_tempfile . '-' . a:entry, ':p')
+	execute '!' . g:PhilPapersSearch#sep_offprint . ' --output ' . l:file . ' --md ' . a:entry
 	execute 'edit ' . l:file . '.md'
 	let l:text = join(getline(0, line('$')), "\n")
 	let l:date = getline(search('^<div id="pubinfo">$', 'nW') + 2)

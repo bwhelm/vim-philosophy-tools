@@ -7,4 +7,4 @@ let g:PhilPapersSearch#sep_tempfile = get(g:, 'PhilPapersSearch#sep_tempfile', '
 
 command! Doi2Bib :call philpaperssearch#Doi2Bib()
 command! -nargs=* PPSearch :call philpaperssearch#PhilpapersSearch(<q-args>)
-command! -nargs=* SEPtoMarkdown :call philpaperssearch#SEPtoMarkdown(<q-args>)
+command! -nargs=1 SEPtoMarkdown :call philpaperssearch#SEPtoMarkdown(<q-args>)
