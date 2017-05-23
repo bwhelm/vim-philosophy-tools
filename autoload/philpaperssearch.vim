@@ -1,3 +1,4 @@
+scriptencoding utf-8
 " ============================================================================
 " Bibliographical Search Functions
 " ============================================================================
@@ -34,4 +35,31 @@ function! philpaperssearch#PhilpapersSearch( ... )
 	0
 	silent set filetype=ppsearch
 	silent set syntax=pandoc
+endfunction
+
+" Get markdown file from SEP
+function! philpaperssearch#SEPtoMarkdown( ... )
+	let l:entry = join(a:000, '')
+	let l:file = fnamemodify(g:PhilPapersSearch#sep_tempfile, ':p')
+	execute '!' . g:PhilPapersSearch#sep_offprint . ' --output ' . l:file . ' --md ' . l:entry
+	execute 'edit ' . l:file . '.md'
+	let l:text = join(getline(0, line('$')), "\n")
+	let l:date = getline(search('^<div id="pubinfo">$', 'nW') + 2)
+	let l:author = getline(search('^\[Copyright © \d\+\]', 'nW') + 1)
+	let l:author = substitute(l:author, '&lt;', '', 'g')
+	let l:author = substitute(l:author, '&gt;', '', 'g')
+	let l:title = getline(search('^<div id="aueditable">', 'nW') + 2)[2:]
+	let l:abstract = getline(search('^<div id="preamble">', 'nW') + 2)
+	call search('^<div id="main-text">')
+	silent 0,delete_
+	call search('^<\/div>\n\n<div id="bibliography">')
+	silent ,+2delete_
+	call search('^<\/div>')
+	silent ,$delete_
+	execute "normal! ggO---\<CR>title: \"" . l:title . "\"\<CR>author: \"" . l:author . "\"\<CR>date: \"" . l:date . "\"\<CR>abstract: |\<CR>\t" . l:abstract . "\<CR>\<BS>fancyhdr: fancy\<CR>fontsize: 11pt\<CR>geometry: ipad\<CR>numbersections: true\<CR>---\<CR>"
+	silent! %substitute/^#\(#*\) \[[0-9.]\+ \([^]]*\)\].*/\1 \2 /g
+	call search('^## \[Bibliography')
+	normal! cc# Bibliography {-}
+	normal! gg
+	write
 endfunction
