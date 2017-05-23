@@ -56,7 +56,7 @@ function! philpaperssearch#SEPtoMarkdown( ... )
 	silent ,+2delete_
 	call search('^<\/div>')
 	silent ,$delete_
-	execute "normal! ggO---\<CR>title: \"" . l:title . "\"\<CR>author: \"" . l:author . "\"\<CR>date: \"" . l:date . "\"\<CR>abstract: |\<CR>\t" . l:abstract . "\<CR>\<BS>fancyhdr: fancy\<CR>fontsize: 11pt\<CR>geometry: ipad\<CR>numbersections: true\<CR>---\<CR>"
+	execute "normal! ggO---\<CR>title: \"" . l:title . "\"\<CR>author: \"" . l:author . "\"\<CR>date: \"" . l:date . "\"\<CR>abstract: |\<CR>\t" . l:abstract . "\<CR>\<BS>lualatex: true\<CR>fancyhdr: fancy\<CR>fontsize: 11pt\<CR>geometry: ipad\<CR>numbersections: true\<CR>---\<CR>"
 	silent! %substitute/^#\(#*\) \[[0-9.]\+ \([^]]*\)\].*/\1 \2 /g
 	call search('^## \[Bibliography')
 	normal! cc# Bibliography {-}
