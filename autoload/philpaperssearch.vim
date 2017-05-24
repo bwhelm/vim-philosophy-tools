@@ -10,7 +10,7 @@ let s:pythonPath = expand('<sfile>:p:h:h') . '/python/philpaperssearch.py'
 function! philpaperssearch#Doi2Bib()
 	let l:doi = input('DOI: ')
 	let l:doi = matchstr(l:doi, '^\s*\zs\S*\ze\s*$')  " Strip off spaces
-	execute 'silent read !curl -s "http://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
+	execute 'silent read !curl -sL "http://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
 	" Because we need the year in curly braces....
 	%substitute/year = \(\d\+\),/year = {\1},/ge
 endfunction
@@ -63,7 +63,7 @@ function! philpaperssearch#SEPtoMarkdown(entry)
 	normal! cc# Bibliography {-}
 	normal! gg
 	write
-	let l:bibscrape = system('curl "https://plato.stanford.edu/cgi-bin/encyclopedia/archinfo.cgi?entry=' . l:entry . '"')
+	let l:bibscrape = system('curl -sL "https://plato.stanford.edu/cgi-bin/encyclopedia/archinfo.cgi?entry=' . l:entry . '"')
 	let l:bibtex = matchstr(l:bibscrape, '<pre>\zs@InCollection\_.*\ze<\/pre>')
 	pedit BibTeX.bib
 	wincmd P
