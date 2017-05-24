@@ -39,8 +39,9 @@ endfunction
 
 " Get markdown file from SEP
 function! philpaperssearch#SEPtoMarkdown(entry)
-	let l:file = fnamemodify(g:PhilPapersSearch#sep_tempfile . '-' . a:entry, ':p')
-	execute '!' . g:PhilPapersSearch#sep_offprint . ' --output ' . l:file . ' --md ' . a:entry
+	let l:entry = tolower(a:entry)
+	let l:file = fnamemodify(g:PhilPapersSearch#sep_tempfile . '-' . l:entry, ':p')
+	execute '!' . g:PhilPapersSearch#sep_offprint . ' --output ' . l:file . ' --md ' . l:entry
 	execute 'edit ' . l:file . '.md'
 	let l:text = join(getline(0, line('$')), "\n")
 	let l:date = getline(search('^<div id="pubinfo">$', 'nW') + 2)
@@ -57,12 +58,12 @@ function! philpaperssearch#SEPtoMarkdown(entry)
 	silent ,$delete_
 	execute "normal! ggO---\<CR>title: \"" . l:title . "\"\<CR>author: \"" . l:author . "\"\<CR>date: \"" . l:date . "\"\<CR>abstract: |\<CR>\t" . l:abstract . "\<CR>\<BS>lualatex: true\<CR>fancyhdr: fancy\<CR>fontsize: 11pt\<CR>geometry: ipad\<CR>numbersections: true\<CR>---\<CR>"
 	silent! %substitute/^#\(#*\) \[[0-9.]\+ \([^]]*\)\].*/\1 \2 /g
-	silent! %substitute/\(!\[[^]]*\](\)\([^)]*)\)/\1http:\/\/plato.stanford.edu\/entries\/<a:entry>\/\2/g
+	execute 'silent! %substitute/\(!\[[^]]*\](\)\([^)]*)\)/\1http:\/\/plato.stanford.edu\/entries\/' . l:entry . '\/\2/g'
 	call search('^## \[Bibliography')
 	normal! cc# Bibliography {-}
 	normal! gg
 	write
-	let l:bibscrape = system('curl "https://plato.stanford.edu/cgi-bin/encyclopedia/archinfo.cgi?entry=' . a:entry . '"')
+	let l:bibscrape = system('curl "https://plato.stanford.edu/cgi-bin/encyclopedia/archinfo.cgi?entry=' . l:entry . '"')
 	let l:bibtex = matchstr(l:bibscrape, '<pre>\zs@InCollection\_.*\ze<\/pre>')
 	pedit BibTeX.bib
 	wincmd P
