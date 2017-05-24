@@ -62,4 +62,16 @@ function! philpaperssearch#SEPtoMarkdown(entry)
 	normal! cc# Bibliography {-}
 	normal! gg
 	write
+	let l:bibscrape = system('curl "https://plato.stanford.edu/cgi-bin/encyclopedia/archinfo.cgi?entry=' . a:entry . '"')
+	let l:bibtex = matchstr(l:bibscrape, '<pre>\zs@InCollection\_.*\ze<\/pre>')
+	pedit BibTeX.bib
+	wincmd P
+	resize 13
+	setlocal buftype=nofile
+	setlocal nowrap
+	silent call append(0, split(l:bibtex, '\n'))
+	silent call append(3, '	abstract     =  {' . l:abstract . '},')
+	silent 0,$yank *
+	0
+	nnoremap <silent><buffer> q :quit!<CR>
 endfunction
