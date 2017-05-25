@@ -96,7 +96,7 @@ endfunction
 function! s:PrepareMarkdown(htmlFileList, notes, entry)
 	" Create markdown file compiled from all .html files, with index.html first
 	" and notes.html (if any) last.
-	silent execute '%!pandoc -t markdown+table_captions-simple_tables-multiline_tables-grid_tables+pipe_tables+line_blocks-fancy_lists+definition_lists+example_lists --wrap=none --atx-headers --standalone --normalize index.html ' . join(a:htmlFileList, ' ') . ' ' . a:notes . ' -o index.md'
+	silent execute '%!pandoc -t markdown+table_captions-simple_tables-multiline_tables+grid_tables+pipe_tables+line_blocks-fancy_lists+definition_lists+example_lists --wrap=none --atx-headers --standalone --normalize index.html ' . join(a:htmlFileList, ' ') . ' ' . a:notes . ' -o index.md'
 	silent edit! index.md
 	" Scrape article metadata
 	1
@@ -121,23 +121,27 @@ function! s:PrepareMarkdown(htmlFileList, notes, entry)
 	" Remove unwanted <div> and </div>
 	silent global/^<\/\?div/d
 	" Add new YAML header
-	silent execute "normal! ggO---\<CR>title: \"" . l:title . "\"\<CR>author: \"" . l:author . "\"\<CR>date: \"" . l:date . "\"\<CR>lualatex: true\<CR>fancyhdr: fancy\<CR>fontsize: 11pt\<CR>geometry: ipad\<CR>numbersections: true\<CR>toc: true\<CR>---\<CR>"
+	silent execute "normal! ggO---\<CR>title: \"" . l:title . "\"\<CR>author: \"" . l:author . "\"\<CR>date: \"" . l:date . "\"\<CR>lualatex: true\<CR>fancyhdr: headings\<CR>fontsize: 11pt\<CR>geometry: ipad\<CR>numbersections: true\<CR>toc: true\<CR>---\<CR>"
 	" Fix (sub)sections
 	silent! %substitute/^#\(#*\) \[[0-9.]\+ \([^]]*\)\].*/\1 \2 /g
 	silent call search('^## \[Bibliography')
 	normal! cc# Bibliography {-}
 	" Set off copyright; strip references to SEP tools, etc.
+	+1
+	silent! ,$substitute/^#\(#*\)\( .*\)/\1\2 {-}/g
 	silent call search('^[Copyright')
 	-2
 	silent normal! 76i-
 	silent execute "normal! o\<CR><center>\<CR>\<CR>"
 	+5
 	silent execute "normal! o</center>\<CR>\<CR>"
+	silent normal! 76i-
+	silent execute "normal! \<CR>\<CR>"
 	normal! d/^##
 	" Handle footnotes
 	silent! %substitute/\^\\\[\[\(\d\+\)\](notes.html[^^]*\^/[^\1]/g
 	silent! %substitute/^\[\(\d\+\)\.\](index.html[^}]*}/[^\1]: /g
-	silent global/^## Notes to \[[^]]*\](index.html)/delete_
+	silent global/^# Notes to \[[^]]*\](index.html)/delete_
 	silent write
 	normal! gg
 	call <SID>ShowBibTeX(a:entry, l:abstract)
