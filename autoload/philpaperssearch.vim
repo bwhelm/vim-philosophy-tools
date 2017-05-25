@@ -54,31 +54,26 @@ function! s:GetSEPFiles(entry,tempDir)
 endfunction
 
 function! s:PrepareHTML()
-	silent call search('^<title>\n.', 'e')
-	let l:title = matchstr(getline('.'), '.*\ze (Stanford Encyclopedia of Philosophy)')
 	let l:line = search('\n<div id="article">', 'nW') 
 	silent execute '1,' . l:line . 'delete_'
-	silent call search('<h1>' . l:title . '</h1>')
-	let l:date = matchstr(getline('.'), '<div id="pubinfo"><em>\zs.*\ze</em>')
 	silent call search('^</div> <!-- End article -->\n\n', 'e')
-	silent normal! "_dG
+	silent ,$delete_
 	silent call search('<div id="academic-tools">')
 	let l:line = search('<div id="other-internet-resources">', 'n') - 1
 	silent execute ',' . l:line . 'delete_'
 	silent write
-	return [l:title, l:date]
 endfunction
 
 function! s:StripHTMLHeaderFooter(htmlFileList)
 	" Strip header and footer from all but the main file
 	for l:fileName in a:htmlFileList
 		silent execute 'edit! ' . l:fileName
-		call search('^<!--DO NOT MODIFY THIS LINE AND ABOVE-->')
+		silent call search('^<!--DO NOT MODIFY THIS LINE AND ABOVE-->')
 		silent 1,delete_
-		call search('<!--DO NOT MODIFY THIS LINE AND BELOW-->')
+		silent call search('<!--DO NOT MODIFY THIS LINE AND BELOW-->')
 		silent ,$delete_
 		silent! global/^<\/\?div/delete_
-		write
+		silent write
 	endfor
 endfunction
 
@@ -98,23 +93,35 @@ function! s:ShowBibTeX(entry, abstract)
 	nnoremap <silent><buffer> q :quit!<CR>
 endfunction
 
-function! s:PrepareMarkdown(htmlFileList, notes, title, date, entry)
+function! s:PrepareMarkdown(htmlFileList, notes, entry)
 	" Create markdown file compiled from all .html files, with index.html first
 	" and notes.html (if any) last.
-	execute '%!pandoc -t markdown+table_captions-simple_tables-multiline_tables-grid_tables+pipe_tables+line_blocks-fancy_lists+definition_lists+example_lists --wrap=none --atx-headers --standalone --normalize index.html ' . join(a:htmlFileList, ' ') . ' ' . a:notes . ' -o index.md'
+	silent execute '%!pandoc -t markdown+table_captions-simple_tables-multiline_tables-grid_tables+pipe_tables+line_blocks-fancy_lists+definition_lists+example_lists --wrap=none --atx-headers --standalone --normalize index.html ' . join(a:htmlFileList, ' ') . ' ' . a:notes . ' -o index.md'
 	silent edit! index.md
 	" Scrape article metadata
+	1
+	silent call search('^# ')
+	let l:title = getline('.')[2:]
+	silent call search('<div id="pubinfo">\n\n\*', 'e')
+	let l:date = getline('.')
+	let l:date = substitute(l:date, '\**\(.\{-}\)\**$', '\1', '')
 	let l:author = getline(search('^\[Copyright © \d\+\]', 'nW') + 1)
 	let l:author = substitute(l:author, '&lt;', '', 'g')
 	let l:author = substitute(l:author, '&gt;', '', 'g')
-	let l:abstract = getline(search('^<div id="preamble">', 'nW') + 2)
 	" Strip header
-	silent call search('^<div id="main-text">')
+	silent call search('^<div id="preamble">')
 	silent 1,delete_
+	" Take first paragraph of preamble as abstract
+	+1
+	let l:abstract = getline('.')
+	" Strip TOC
+	silent call search('^<div id="toc">')
+	let l:line = search('^<div id="main-text">', 'n')
+	execute 'silent ,' . l:line . 'delete_'
 	" Remove unwanted <div> and </div>
 	silent global/^<\/\?div/d
 	" Add new YAML header
-	silent execute "normal! ggO---\<CR>title: \"" . a:title . "\"\<CR>author: \"" . l:author . "\"\<CR>date: \"" . a:date . "\"\<CR>abstract: |\<CR>\t" . l:abstract . "\<CR>\<BS>lualatex: true\<CR>fancyhdr: fancy\<CR>fontsize: 11pt\<CR>geometry: ipad\<CR>numbersections: true\<CR>toc: true\<CR>---\<CR>"
+	silent execute "normal! ggO---\<CR>title: \"" . l:title . "\"\<CR>author: \"" . l:author . "\"\<CR>date: \"" . l:date . "\"\<CR>lualatex: true\<CR>fancyhdr: fancy\<CR>fontsize: 11pt\<CR>geometry: ipad\<CR>numbersections: true\<CR>toc: true\<CR>---\<CR>"
 	" Fix (sub)sections
 	silent! %substitute/^#\(#*\) \[[0-9.]\+ \([^]]*\)\].*/\1 \2 /g
 	silent call search('^## \[Bibliography')
@@ -145,7 +152,7 @@ function! philpaperssearch#SEPtoMarkdown(entry)
 	let l:htmlFileList = filter(l:htmlFileList, 'v:val !~ "\(index\|notes\).html"')
 	call <SID>StripHTMLHeaderFooter(l:htmlFileList)
 	silent edit! index.html
-	let [l:title, l:date] = <SID>PrepareHTML()
+	call <SID>PrepareHTML()
 	call filter(l:htmlFileList, 'v:val !~ "notes\."')
-	call <SID>PrepareMarkdown(l:htmlFileList, l:notes, l:title, l:date, a:entry)
+	call <SID>PrepareMarkdown(l:htmlFileList, l:notes, a:entry)
 endfunction
