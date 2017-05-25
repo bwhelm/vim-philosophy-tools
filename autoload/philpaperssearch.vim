@@ -10,7 +10,7 @@ let s:pythonPath = expand('<sfile>:p:h:h') . '/python/philpaperssearch.py'
 function! philpaperssearch#Doi2Bib()
 	let l:doi = input('DOI: ')
 	let l:doi = matchstr(l:doi, '^\s*\zs\S*\ze\s*$')  " Strip off spaces
-	execute 'silent read !curl -sL "http://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
+	execute 'silent read !curl -sL "https://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
 	" Because we need the year in curly braces....
 	%substitute/year = \(\d\+\),/year = {\1},/ge
 endfunction
@@ -37,33 +37,54 @@ function! philpaperssearch#PhilpapersSearch( ... )
 	silent set syntax=pandoc
 endfunction
 
-" Get markdown file from SEP
-function! philpaperssearch#SEPtoMarkdown(entry)
-	let l:entry = tolower(a:entry)
-	let l:file = fnamemodify(g:PhilPapersSearch#sep_tempfile . '-' . l:entry, ':p')
-	execute '!' . g:PhilPapersSearch#sep_offprint . ' --output ' . l:file . ' --md ' . l:entry
-	execute 'edit ' . l:file . '.md'
-	let l:text = join(getline(0, line('$')), "\n")
-	let l:date = getline(search('^<div id="pubinfo">$', 'nW') + 2)
-	let l:author = getline(search('^\[Copyright © \d\+\]', 'nW') + 1)
-	let l:author = substitute(l:author, '&lt;', '', 'g')
-	let l:author = substitute(l:author, '&gt;', '', 'g')
-	let l:title = getline(search('^<div id="aueditable">', 'nW') + 2)[2:]
-	let l:abstract = getline(search('^<div id="preamble">', 'nW') + 2)
-	call search('^<div id="main-text">')
-	silent 0,delete_
-	call search('^<\/div>\n\n<div id="bibliography">')
-	silent ,+2delete_
-	call search('^<\/div>')
-	silent ,$delete_
-	execute "normal! ggO---\<CR>title: \"" . l:title . "\"\<CR>author: \"" . l:author . "\"\<CR>date: \"" . l:date . "\"\<CR>abstract: |\<CR>\t" . l:abstract . "\<CR>\<BS>lualatex: true\<CR>fancyhdr: fancy\<CR>fontsize: 11pt\<CR>geometry: ipad\<CR>numbersections: true\<CR>---\<CR>"
-	silent! %substitute/^#\(#*\) \[[0-9.]\+ \([^]]*\)\].*/\1 \2 /g
-	execute 'silent! %substitute/\(!\[[^]]*\](\)\([^)]*)\)/\1http:\/\/plato.stanford.edu\/entries\/' . l:entry . '\/\2/g'
-	call search('^## \[Bibliography')
-	normal! cc# Bibliography {-}
-	normal! gg
-	write
-	let l:bibscrape = system('curl -sL "https://plato.stanford.edu/cgi-bin/encyclopedia/archinfo.cgi?entry=' . l:entry . '"')
+" ============================================================================
+" Get SEP article (to convert to .pdf)
+" ============================================================================
+
+function! s:GetSEPFiles(entry,tempDir)
+	silent execute 'cd ' . a:tempDir
+	silent call system('rm *')
+	silent execute 'read !wget -r --no-parent --no-directories --no-verbose "http://plato.stanford.edu/entries/' . a:entry . '/"'
+	silent global!/->/delete_
+	silent %substitute/.*-> "\([^"]*\)".*/\1/g
+	silent global/^robots.txt$/delete_
+	silent global/\.\d$/delete_
+	let l:notes = getline(search('notes\.html'))
+	return [getline(0, '$'), l:notes]
+endfunction
+
+function! s:PrepareHTML()
+	silent call search('^<title>\n.', 'e')
+	let l:title = matchstr(getline('.'), '.*\ze (Stanford Encyclopedia of Philosophy)')
+	let l:line = search('\n<div id="article">', 'nW') 
+	silent execute '1,' . l:line . 'delete_'
+	silent call search('<h1>' . l:title . '</h1>')
+	let l:date = matchstr(getline('.'), '<div id="pubinfo"><em>\zs.*\ze</em>')
+	silent call search('^</div> <!-- End article -->\n\n', 'e')
+	silent normal! "_dG
+	silent call search('<div id="academic-tools">')
+	let l:line = search('<div id="other-internet-resources">', 'n') - 1
+	silent execute ',' . l:line . 'delete_'
+	silent write
+	return [l:title, l:date]
+endfunction
+
+function! s:StripHTMLHeaderFooter(htmlFileList)
+	" Strip header and footer from all but the main file
+	for l:fileName in a:htmlFileList
+		silent execute 'edit! ' . l:fileName
+		call search('^<!--DO NOT MODIFY THIS LINE AND ABOVE-->')
+		silent 1,delete_
+		call search('<!--DO NOT MODIFY THIS LINE AND BELOW-->')
+		silent ,$delete_
+		silent! global/^<\/\?div/delete_
+		write
+	endfor
+endfunction
+
+function! s:ShowBibTeX(entry, abstract)
+	" Scrape bibliographic data from SEP website
+	let l:bibscrape = system('curl -sL "https://plato.stanford.edu/cgi-bin/encyclopedia/archinfo.cgi?entry=' . a:entry . '"')
 	let l:bibtex = matchstr(l:bibscrape, '<pre>\zs@InCollection\_.*\ze<\/pre>')
 	pedit BibTeX.bib
 	wincmd P
@@ -71,8 +92,60 @@ function! philpaperssearch#SEPtoMarkdown(entry)
 	setlocal buftype=nofile
 	setlocal nowrap
 	silent call append(0, split(l:bibtex, '\n'))
-	silent call append(3, '	abstract     =  {' . l:abstract . '},')
+	silent call append(3, '	abstract     =  {' . a:abstract . '},')
 	silent 0,$yank *
 	0
 	nnoremap <silent><buffer> q :quit!<CR>
+endfunction
+
+function! s:PrepareMarkdown(htmlFileList, notes, title, date, entry)
+	" Create markdown file compiled from all .html files, with index.html first
+	" and notes.html (if any) last.
+	execute '%!pandoc -t markdown+table_captions-simple_tables-multiline_tables-grid_tables+pipe_tables+line_blocks-fancy_lists+definition_lists+example_lists --wrap=none --atx-headers --standalone --normalize index.html ' . join(a:htmlFileList, ' ') . ' ' . a:notes . ' -o index.md'
+	silent edit! index.md
+	" Scrape article metadata
+	let l:author = getline(search('^\[Copyright © \d\+\]', 'nW') + 1)
+	let l:author = substitute(l:author, '&lt;', '', 'g')
+	let l:author = substitute(l:author, '&gt;', '', 'g')
+	let l:abstract = getline(search('^<div id="preamble">', 'nW') + 2)
+	" Strip header
+	silent call search('^<div id="main-text">')
+	silent 1,delete_
+	" Remove unwanted <div> and </div>
+	silent global/^<\/\?div/d
+	" Add new YAML header
+	silent execute "normal! ggO---\<CR>title: \"" . a:title . "\"\<CR>author: \"" . l:author . "\"\<CR>date: \"" . a:date . "\"\<CR>abstract: |\<CR>\t" . l:abstract . "\<CR>\<BS>lualatex: true\<CR>fancyhdr: fancy\<CR>fontsize: 11pt\<CR>geometry: ipad\<CR>numbersections: true\<CR>toc: true\<CR>---\<CR>"
+	" Fix (sub)sections
+	silent! %substitute/^#\(#*\) \[[0-9.]\+ \([^]]*\)\].*/\1 \2 /g
+	silent call search('^## \[Bibliography')
+	normal! cc# Bibliography {-}
+	" Set off copyright; strip references to SEP tools, etc.
+	silent call search('^[Copyright')
+	-2
+	silent normal! 76i-
+	silent execute "normal! o\<CR><center>\<CR>\<CR>"
+	+5
+	silent execute "normal! o</center>\<CR>\<CR>"
+	normal! d/^##
+	" Handle footnotes
+	silent! %substitute/\^\\\[\[\(\d\+\)\](notes.html[^^]*\^/[^\1]/g
+	silent! %substitute/^\[\(\d\+\)\.\](index.html[^}]*}/[^\1]: /g
+	silent global/^## Notes to \[[^]]*\](index.html)/delete_
+	silent write
+	normal! gg
+	call <SID>ShowBibTeX(a:entry, l:abstract)
+endfunction
+
+" Get markdown file from SEP
+function! philpaperssearch#SEPtoMarkdown(entry)
+	let l:tempDir = fnamemodify('~/tmp/SEP', ':p')
+	let [l:fileList, l:notes] = <SID>GetSEPFiles(a:entry, l:tempDir)
+	let l:htmlFileList = filter(l:fileList, 'v:val =~ "\.html"')
+	call filter(l:htmlFileList, 'v:val !~ "index\."')
+	let l:htmlFileList = filter(l:htmlFileList, 'v:val !~ "\(index\|notes\).html"')
+	call <SID>StripHTMLHeaderFooter(l:htmlFileList)
+	silent edit! index.html
+	let [l:title, l:date] = <SID>PrepareHTML()
+	call filter(l:htmlFileList, 'v:val !~ "notes\."')
+	call <SID>PrepareMarkdown(l:htmlFileList, l:notes, l:title, l:date, a:entry)
 endfunction
