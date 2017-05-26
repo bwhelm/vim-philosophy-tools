@@ -4,10 +4,10 @@ scriptencoding utf-8
 " ============================================================================
 
 " Path to python file that scrapes search data from philpapers.org
-let s:pythonPath = expand('<sfile>:p:h:h') . '/python/philpaperssearch.py'
+let s:pythonPath = expand('<sfile>:p:h:h') . '/python/ppsearch.py'
 
 " Download bibtex citation info from DOI
-function! philpaperssearch#Doi2Bib()
+function! philosophytools#Doi2Bib()
 	let l:doi = input('DOI: ')
 	let l:doi = matchstr(l:doi, '^\s*\zs\S*\ze\s*$')  " Strip off spaces
 	execute 'silent read !curl -sL "https://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
@@ -16,7 +16,7 @@ function! philpaperssearch#Doi2Bib()
 endfunction
 
 " Search philpapers.org, and return structured list of items.
-function! philpaperssearch#PhilpapersSearch( ... )
+function! philosophytools#ppsearch( ... )
 	let l:query = join(a:000, '\\%20')
 	if l:query ==# ''
 		let l:query = input('Search Query: ')
@@ -148,7 +148,7 @@ function! s:PrepareMarkdown(htmlFileList, notes, entry)
 endfunction
 
 " Get markdown file from SEP
-function! philpaperssearch#SEPtoMarkdown(entry)
+function! philosophytools#SEPtoMarkdown(entry)
 	let l:tempDir = fnamemodify('~/tmp/SEP', ':p')
 	let [l:fileList, l:notes] = <SID>GetSEPFiles(a:entry, l:tempDir)
 	let l:htmlFileList = filter(l:fileList, 'v:val =~ "\.html"')
