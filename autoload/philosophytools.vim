@@ -7,16 +7,16 @@ scriptencoding utf-8
 let s:pythonPath = expand('<sfile>:p:h:h') . '/python/ppsearch.py'
 
 " Download bibtex citation info from DOI
-function! philosophytools#Doi2Bib()
+function! philosophytools#Doi2Bib() abort
 	let l:doi = input('DOI: ')
 	let l:doi = matchstr(l:doi, '^\s*\zs\S*\ze\s*$')  " Strip off spaces
 	execute 'silent read !curl -sL "https://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
 	" Because we need the year in curly braces....
-	%substitute/year = \(\d\+\),/year = {\1},/ge
+	silent! %substitute/year = \(\d\+\),/year = {\1},/ge
 endfunction
 
 " Search philpapers.org, and return structured list of items.
-function! philosophytools#ppsearch( ... )
+function! philosophytools#ppsearch( ... ) abort
 	let l:query = join(a:000, '\\%20')
 	if l:query ==# ''
 		let l:query = input('Search Query: ')
@@ -41,19 +41,19 @@ endfunction
 " Get SEP article (to convert to .pdf)
 " ============================================================================
 
-function! s:GetSEPFiles(entry,tempDir)
+function! s:GetSEPFiles(entry,tempDir) abort
 	silent execute 'cd ' . a:tempDir
 	silent call system('rm *')
-	silent execute 'read !wget -r --no-parent --no-directories --no-verbose "http://plato.stanford.edu/entries/' . a:entry . '/"'
+	silent execute 'read !wget -r --no-parent --no-directories --no-verbose "https://plato.stanford.edu/entries/' . a:entry . '/"'
 	silent global!/->/delete_
-	silent %substitute/.*-> "\([^"]*\)".*/\1/g
+	silent! %substitute/.*-> "\([^"]*\)".*/\1/g
 	silent global/^robots.txt$/delete_
 	silent global/\.\d$/delete_
 	let l:notes = getline(search('notes\.html'))
 	return [getline(0, '$'), l:notes]
 endfunction
 
-function! s:PrepareHTML()
+function! s:PrepareHTML() abort
 	let l:line = search('\n<div id="article">', 'nW') 
 	silent execute '1,' . l:line . 'delete_'
 	silent call search('^</div> <!-- End article -->\n\n', 'e')
@@ -64,7 +64,7 @@ function! s:PrepareHTML()
 	silent write
 endfunction
 
-function! s:StripHTMLHeaderFooter(htmlFileList)
+function! s:StripHTMLHeaderFooter(htmlFileList) abort
 	" Strip header and footer from all but the main file
 	for l:fileName in a:htmlFileList
 		silent execute 'edit! ' . l:fileName
@@ -77,7 +77,7 @@ function! s:StripHTMLHeaderFooter(htmlFileList)
 	endfor
 endfunction
 
-function! s:ShowBibTeX(entry, abstract)
+function! s:ShowBibTeX(entry, abstract) abort
 	" Scrape bibliographic data from SEP website
 	let l:bibscrape = system('curl -sL "https://plato.stanford.edu/cgi-bin/encyclopedia/archinfo.cgi?entry=' . a:entry . '"')
 	let l:bibtex = matchstr(l:bibscrape, '<pre>\zs@InCollection\_.*\ze<\/pre>')
@@ -93,7 +93,7 @@ function! s:ShowBibTeX(entry, abstract)
 	nnoremap <silent><buffer> q :quit!<CR>
 endfunction
 
-function! s:PrepareMarkdown(htmlFileList, notes, entry)
+function! s:PrepareMarkdown(htmlFileList, notes, entry) abort
 	" Create markdown file compiled from all .html files, with index.html first
 	" and notes.html (if any) last.
 	silent execute '%!pandoc -t markdown+table_captions-simple_tables-multiline_tables+grid_tables+pipe_tables+line_blocks-fancy_lists+definition_lists+example_lists --wrap=none --atx-headers --standalone --normalize index.html ' . join(a:htmlFileList, ' ') . ' ' . a:notes . ' -o index.md'
@@ -142,13 +142,15 @@ function! s:PrepareMarkdown(htmlFileList, notes, entry)
 	silent! %substitute/\^\\\[\[\(\d\+\)\](notes.html[^^]*\^/[^\1]/g
 	silent! %substitute/^\[\(\d\+\)\.\](index.html[^}]*}/[^\1]: /g
 	silent global/^# Notes to \[[^]]*\](index.html)/delete_
+	" Fix links
+	silent! %substitute/](\.\./](https:\/\/plato.stanford.edu\/entries/g
 	silent write
 	normal! gg
 	call <SID>ShowBibTeX(a:entry, l:abstract)
 endfunction
 
 " Get markdown file from SEP
-function! philosophytools#SEPtoMarkdown(entry)
+function! philosophytools#SEPtoMarkdown(entry) abort
 	let l:tempDir = fnamemodify('~/tmp/SEP', ':p')
 	let [l:fileList, l:notes] = <SID>GetSEPFiles(a:entry, l:tempDir)
 	let l:htmlFileList = filter(l:fileList, 'v:val =~ "\.html"')
