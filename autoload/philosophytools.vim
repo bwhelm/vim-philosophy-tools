@@ -56,7 +56,7 @@ endfunction
 function! s:PrepareHTML() abort
     let l:line = search('\n<div id="article">', 'nW') 
     silent execute '1,' . l:line . 'delete_'
-    silent call search('^</div> <!-- End article -->\n\n', 'e')
+    silent call search('^<\/div> <!-- End article -->\n\n', 'e')
     silent ,$delete_
     silent call search('<div id="academic-tools">')
     let l:line = search('<div id="other-internet-resources">', 'n') - 1
@@ -68,7 +68,7 @@ function! s:StripHTMLHeaderFooter(htmlFileList) abort
     " Strip header and footer from all but the main file
     for l:fileName in a:htmlFileList
         silent execute 'edit! ' . l:fileName
-        silent call search('^<!--DO NOT MODIFY THIS LINE AND ABOVE-->')
+        silent call search('<!--DO NOT MODIFY THIS LINE AND ABOVE-->')
         silent 1,delete_
         silent call search('<!--DO NOT MODIFY THIS LINE AND BELOW-->')
         silent ,$delete_
@@ -96,7 +96,7 @@ endfunction
 function! s:PrepareMarkdown(htmlFileList, notes, entry) abort
     " Create markdown file compiled from all .html files, with index.html first
     " and notes.html (if any) last.
-    silent execute '%!pandoc -t markdown+table_captions-simple_tables-multiline_tables+grid_tables+pipe_tables+line_blocks-fancy_lists+definition_lists+example_lists --wrap=none --atx-headers --standalone --normalize index.html ' . join(a:htmlFileList, ' ') . ' ' . a:notes . ' -o index.md'
+    silent execute '%!pandoc -t markdown+table_captions-simple_tables-multiline_tables+grid_tables+pipe_tables+line_blocks-fancy_lists+definition_lists+example_lists-fenced_divs --wrap=none --atx-headers --standalone index.html ' . join(a:htmlFileList, ' ') . ' ' . a:notes . ' -o index.md'
     silent edit! index.md
     " Scrape article metadata
     1
@@ -106,8 +106,8 @@ function! s:PrepareMarkdown(htmlFileList, notes, entry) abort
     let l:date = getline('.')
     let l:date = substitute(l:date, '\**\(.\{-}\)\**$', '\1', '')
     let l:author = getline(search('^\[Copyright © \d\+\]', 'nW') + 1)
-    let l:author = substitute(l:author, '&lt;', '', 'g')
-    let l:author = substitute(l:author, '&gt;', '', 'g')
+    let l:author = substitute(l:author, '\\<', '', 'g')
+    let l:author = substitute(l:author, '\\>', '', 'g')
     " Strip header
     silent call search('^<div id="preamble">')
     silent 1,delete_
