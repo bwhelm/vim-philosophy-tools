@@ -169,6 +169,6 @@ function! s:GetBibTeX()
     endif
 endfunction
 
-nnoremap <silent> <buffer> <CR> :call <SID>GetBibTeX()<CR>
+nnoremap <silent><buffer> <CR> :call <SID>GetBibTeX()<CR>
 nnoremap <silent><buffer> <C-n> /^\d\+\.\s<CR>zz
 nnoremap <silent><buffer> <C-p> ?^\d\+\.\s<CR>zz

@@ -43,6 +43,7 @@ function! s:ShowBibTeX(entry, abstract) abort
     " Scrape bibliographic data from SEP website
     let l:bibscrape = system('curl -sL "https://plato.stanford.edu/cgi-bin/encyclopedia/archinfo.cgi?entry=' . a:entry . '"')
     let l:bibtex = matchstr(l:bibscrape, '<pre>\zs@InCollection\_.*\ze<\/pre>')
+    let l:bibtex = substitute(l:bibtex, "\\t", '    ', 'g')
     pedit BibTeX.bib
     wincmd P
     resize 13
