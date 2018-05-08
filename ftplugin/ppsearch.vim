@@ -1,7 +1,7 @@
 scriptencoding utf-8
 
 function! s:TitleCase(text)
-    let l:exceptions = ['a', 'an', 'the', 'and', 'but', 'for', 'nor', 'or', 'so', 'yet', 'aboard', 'about', 'above', 'across', 'after', 'against', 'along', 'amid', 'among', 'around', 'as', 'at', 'atop', 'before', 'behind', 'below', 'beneath', 'beside', 'between', 'beyond', 'by', 'despite', 'down', 'during', 'for', 'from', 'in', 'inside', 'into', 'like', 'near', 'of', 'off', 'on', 'onto', 'out', 'outside', 'over', 'past', 'regarding', 'round', 'since', 'than', 'through', 'throughout', 'till', 'to', 'toward', 'under', 'unlike', 'until', 'up', 'upon', 'with', 'within', 'without']
+    let l:exceptions = ['a', 'an', 'the', 'and', 'but', 'for', 'nor', 'or', 'so', 'yet', 'aboard', 'about', 'above', 'across', 'after', 'against', 'along', 'amid', 'among', 'around', 'as', 'at', 'atop', 'before', 'behind', 'below', 'beneath', 'beside', 'between', 'beyond', 'by', 'despite', 'down', 'during', 'for', 'from', 'in', 'inside', 'into', 'like', 'near', 'of', 'off', 'on', 'onto', 'out', 'outside', 'over', 'past', 'regarding', 'round', 'since', 'than', 'through', 'throughout', 'till', 'to', 'toward', 'under', 'unlike', 'until', 'up', 'upon', 'vs', 'with', 'within', 'without']
     let l:text = a:text
     let l:text = substitute(l:text, '\n$', '', '')
     "" Make lowercase all letters---too radical: trust existing uppercase
@@ -112,7 +112,7 @@ function! s:DisplayBibTeX(text, abstract)
     silent 0,$yank *
     0
     " Set up mapping for BibTeX preview window to jump to url
-    nnoremap <silent><buffer> <C-b> :call <SID>OpenUrl()<CR>
+    nnoremap <silent><buffer> gx :call <SID>OpenUrl()<CR>
     nnoremap <silent><buffer> q :quit!<CR>
 endfunction
 
