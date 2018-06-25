@@ -29,6 +29,7 @@ function! bibsearch#ppsearch( ... ) abort
         endif
     endif
     let l:query = substitute(l:query, '\s\+', '\\%20', 'g')
+    let l:query = substitute(l:query, '[''"]', '', 'g')
     let l:formattedText = system('python3 ' . s:pythonPath . ' ' . l:query)
     let l:formattedList = split(l:formattedText, '\n')
     call append(0, l:formattedList)
