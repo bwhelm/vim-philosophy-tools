@@ -13,6 +13,10 @@ function! bibsearch#Doi2Bib() abort
     execute 'silent read !curl -sL "https://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
     " Because we need the year in curly braces....
     silent! %substitute/year = \(\d\+\),/year = {\1},/ge
+    " Tidy BibTeX
+    call misc#TidyBibTeX()
+    silent 0,$yank *
+    0
 endfunction
 
 " Search philpapers.org, and return structured list of items.
