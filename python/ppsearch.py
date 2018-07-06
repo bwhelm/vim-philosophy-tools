@@ -21,31 +21,33 @@ list = soup.table.ol
 def printList(list):
     counter = 0
     text = ''
+    if list is None:
+        return 'Search returned no hits.'
     for item in list.contents:
         if item != '\n':  # Note: every other item is '\n'
             counter += 1
             try:
                 item_id = item['id'][1:]
-            except:
+            except KeyError:
                 item_id = ''
             try:
                 item_citation = item.find('span', {'class': 'citation'})
-            except:
+            except (TypeError, AttributeError):
                 item_citation = ''
             try:
                 item_title = item_citation.find('span',
                                                 {'class':
                                                  'articleTitle recTitle'}).text
-            except:
+            except (TypeError, AttributeError):
                 item_title = ''
             try:
                 item_name = item_citation.find('span', {'class': 'name'}).text
-            except:
+            except (TypeError, AttributeError):
                 item_name = ''
             try:
                 item_pubYear = item_citation.find('span', {'class':
                                                   'pubYear'}).text
-            except:
+            except (TypeError, AttributeError):
                 item_pubYear = ''
             try:
                 item_pubInfo = ''.join([str(tag) for tag in
@@ -54,7 +56,7 @@ def printList(list):
                     .replace('<em class="pubName">', '*') \
                     .replace('<em>', '*') \
                     .replace('</em>', '*')
-            except:
+            except (TypeError, AttributeError):
                 item_pubInfo = ''
             try:
                 item_abstract = item.find('div', {'class': 'abstract'}).text
@@ -65,7 +67,7 @@ def printList(list):
                 # markdown.
                 item_abstract = item_abstract.replace('_', '')
                 item_abstract = '\t**Abstract:** ' + item_abstract + '\n'
-            except:
+            except (TypeError, AttributeError):
                 item_abstract = ''
             try:
                 item_reference = item.find('div', {'class': 'options'}) \
@@ -93,7 +95,7 @@ def printList(list):
                                   + '&formatName=BibTeX'
                     item_reference = '\t**PP:** <' + item_bibtex + '>\n' \
                                      + '\t**URL:** <' + item_reference + '>\n'
-            except:
+            except (TypeError, AttributeError):
                 item_reference = ''
             # Now construct the reference the way I want it....
             text += str(counter) + '. ' + item_name + ' (' + item_pubYear
