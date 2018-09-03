@@ -86,7 +86,7 @@ function! s:PrepareMarkdown(htmlFileList, notes, entry) abort
     " Add new YAML header
     silent execute "normal! ggO---\<CR>title: \"" . l:title . "\"\<CR>author: \"" . l:author . "\"\<CR>date: \"" . l:date . "\"\<CR>lualatex: true\<CR>fancyhdr: headings\<CR>fontsize: 11pt\<CR>geometry: ipad\<CR>numbersections: true\<CR>toc: true\<CR>---\<CR>"
     " Fix (sub)sections
-    silent! %substitute/^#\(#*\) \[[0-9.]\+ \([^]]*\)\].*/\1 \2 /g
+    silent! %substitute/^#\(#*\) \[[0-9.]\+ \([^]]*\)\].*/\1 \2/g
     silent call search('^## \[Bibliography')
     normal! cc# Bibliography {-}
     " Set off copyright; strip references to SEP tools, etc.
@@ -95,9 +95,9 @@ function! s:PrepareMarkdown(htmlFileList, notes, entry) abort
     silent call search('^[Copyright')
     -2
     silent normal! 76i-
-    silent execute "normal! o\<CR><center>\<CR>\<CR>"
+    silent execute "normal! o\<CR>::: center\<CR>"
     +5
-    silent execute "normal! o</center>\<CR>\<CR>"
+    silent execute "normal! o:::\<CR>\<CR>"
     silent normal! 76i-
     silent execute "normal! \<CR>\<CR>"
     normal! d/^##
