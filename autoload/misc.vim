@@ -1,5 +1,5 @@
 " Convert given text to title case
-function! s:TitleCase(text)
+function! s:TitleCase(text) abort
     let l:exceptions = ['a', 'an', 'the', 'and', 'but', 'for', 'nor', 'or', 'so', 'yet', 'aboard', 'about', 'above', 'across', 'after', 'against', 'along', 'amid', 'among', 'around', 'as', 'at', 'atop', 'before', 'behind', 'below', 'beneath', 'beside', 'between', 'beyond', 'by', 'despite', 'down', 'during', 'for', 'from', 'in', 'inside', 'into', 'like', 'near', 'of', 'off', 'on', 'onto', 'out', 'outside', 'over', 'past', 'regarding', 'round', 'since', 'than', 'through', 'throughout', 'till', 'to', 'toward', 'under', 'unlike', 'until', 'up', 'upon', 'vs', 'with', 'within', 'without']
     let l:text = a:text
     let l:text = substitute(l:text, '\n$', '', '')
@@ -21,7 +21,7 @@ function! s:TitleCase(text)
 endfunction
 
 " Clean up BibTeX scraped from web
-function! misc#TidyBibTeX()
+function! misc#TidyBibTeX() abort
     " Fix quotes
     silent %substitute/{\\textquotesingle}/'/ge
     silent %substitute/\(^\s*abstract.*\)\@<!"\([^"]*\)"/\\mkbibquote{\2}/gie

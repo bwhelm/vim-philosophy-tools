@@ -16,7 +16,7 @@ function! s:GetSEPFiles(entry,tempDir) abort
 endfunction
 
 function! s:PrepareHTML() abort
-    let l:line = search('\n<div id="article">', 'nW') 
+    let l:line = search('\n<div id="article">', 'nW')
     silent execute '1,' . l:line . 'delete_'
     silent call search('^<\/div> <!-- End article -->\n\n', 'e')
     silent ,$delete_
@@ -116,12 +116,12 @@ endfunction
 function! SEPscrape#SEPtoMarkdown(entry) abort
     let l:tempDir = fnamemodify('~/tmp/SEP', ':p')
     let [l:fileList, l:notes] = <SID>GetSEPFiles(a:entry, l:tempDir)
-    let l:htmlFileList = filter(l:fileList, 'v:val =~ "\.html"')
-    call filter(l:htmlFileList, 'v:val !~ "index\."')
-    let l:htmlFileList = filter(l:htmlFileList, 'v:val !~ "\(index\|notes\).html"')
+    let l:htmlFileList = filter(l:fileList, 'v:val =~# "\.html"')
+    call filter(l:htmlFileList, 'v:val !~# "index\."')
+    let l:htmlFileList = filter(l:htmlFileList, 'v:val !~# "\(index\|notes\).html"')
     call <SID>StripHTMLHeaderFooter(l:htmlFileList)
     silent edit! index.html
     call <SID>PrepareHTML()
-    call filter(l:htmlFileList, 'v:val !~ "notes\."')
+    call filter(l:htmlFileList, 'v:val !~# "notes\."')
     call <SID>PrepareMarkdown(l:htmlFileList, l:notes, a:entry)
 endfunction
