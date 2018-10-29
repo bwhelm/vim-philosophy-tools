@@ -22,6 +22,7 @@ endfunction
 
 " Clean up BibTeX scraped from web
 function! misc#TidyBibTeX() abort
+    let l:saveSearch = @/
     " Fix quotes
     silent %substitute/{\\textquotesingle}/'/ge
     silent %substitute/\(^\s*abstract.*\)\@<!"\([^"]*\)"/\\mkbibquote{\2}/gie
@@ -71,4 +72,5 @@ function! misc#TidyBibTeX() abort
     endif
     " Delete all empty lines, go to top
     silent global/^\s*$/delete_
+    let @/ = l:saveSearch
 endfunction

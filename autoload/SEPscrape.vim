@@ -4,6 +4,7 @@ scriptencoding utf-8
 " ============================================================================
 
 function! s:GetSEPFiles(entry,tempDir) abort
+    let l:saveSearch = @/
     silent execute 'cd ' . a:tempDir
     silent call system('rm *')
     silent execute 'read !wget -r --no-parent --no-directories --no-verbose "https://plato.stanford.edu/entries/' . a:entry . '/"'
@@ -13,6 +14,7 @@ function! s:GetSEPFiles(entry,tempDir) abort
     silent global/\.\d$/delete_
     let l:notes = getline(search('notes\.html'))
     return [getline(0, '$'), l:notes]
+    let @/ = l:saveSearch
 endfunction
 
 function! s:PrepareHTML() abort
@@ -57,6 +59,7 @@ function! s:ShowBibTeX(entry, abstract) abort
 endfunction
 
 function! s:PrepareMarkdown(htmlFileList, notes, entry) abort
+    let l:saveSearch = @/
     " Create markdown file compiled from all .html files, with index.html first
     " and notes.html (if any) last.
     silent execute '%!pandoc -t markdown+table_captions-simple_tables-multiline_tables+grid_tables+pipe_tables+line_blocks-fancy_lists+definition_lists+example_lists-fenced_divs --wrap=none --atx-headers --standalone index.html ' . join(a:htmlFileList, ' ') . ' ' . a:notes . ' -o index.md'
@@ -110,6 +113,7 @@ function! s:PrepareMarkdown(htmlFileList, notes, entry) abort
     silent write
     normal! gg
     call <SID>ShowBibTeX(a:entry, l:abstract)
+    let @/ = l:saveSearch
 endfunction
 
 " Get markdown file from SEP

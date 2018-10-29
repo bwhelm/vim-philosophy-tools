@@ -23,6 +23,7 @@ function! s:OpenUrl()
 endfunction
 
 function! s:DisplayBibTeX(text, abstract)
+    let l:saveSearch = @/
     pedit BibTeX.bib
     wincmd P
     resize 13
@@ -46,6 +47,7 @@ function! s:DisplayBibTeX(text, abstract)
     " Set up mapping for BibTeX preview window to jump to url
     nnoremap <silent><buffer> gx :call <SID>OpenUrl()<CR>
     nnoremap <silent><buffer> q :quit!<CR>
+    let @/ = l:saveSearch
 endfunction
 
 function! s:GetBibTeX()
