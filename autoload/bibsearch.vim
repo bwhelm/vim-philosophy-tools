@@ -40,7 +40,7 @@ function! bibsearch#ppsearch( ... ) abort
     let l:formattedText = system('python3 ' . s:pythonPath . ' ' . l:query)
     let l:formattedList = split(l:formattedText, '\n')
     call append(0, l:formattedList)
-    silent %substitute/\$/\\$/g
+    silent! %substitute/\$/\\$/g
     0
     silent set filetype=ppsearch
     silent set syntax=pandoc
