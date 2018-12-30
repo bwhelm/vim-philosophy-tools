@@ -5,7 +5,7 @@ scriptencoding utf-8
 
 function! s:GetSEPFiles(entry,tempDir) abort
     let l:saveSearch = @/
-    silent execute 'cd ' . a:tempDir
+    silent execute 'cd' a:tempDir
     silent call system('rm *')
     silent execute 'read !wget -r --no-parent --no-directories --no-verbose "https://plato.stanford.edu/entries/' . a:entry . '/"'
     silent global!/->/delete_
@@ -31,7 +31,7 @@ endfunction
 function! s:StripHTMLHeaderFooter(htmlFileList) abort
     " Strip header and footer from all but the main file
     for l:fileName in a:htmlFileList
-        silent execute 'edit! ' . l:fileName
+        silent execute 'edit!' l:fileName
         silent call search('<!--DO NOT MODIFY THIS LINE AND ABOVE-->')
         silent 1,delete_
         silent call search('<!--DO NOT MODIFY THIS LINE AND BELOW-->')
