@@ -1,6 +1,9 @@
+" vim: set fdm=marker:
+" ============================================================================
+
 scriptencoding utf-8
 
-function! s:getAbstract(abstractLine)
+function! s:getAbstract(abstractLine) abort  "{{{
     " This will pull the abstract from the current item.
     if getline(a:abstractLine) =~# '\*\*Abstract:'
         return getline(a:abstractLine)[15:]
@@ -8,8 +11,8 @@ function! s:getAbstract(abstractLine)
         return ''
     endif
 endfunction
-
-function! s:OpenUrl()
+"}}}
+function! s:OpenUrl() abort  "{{{
     " This will search current buffer for a `doi` or `URL` field and then open
     " a browser to the relevant web address.
     if search('^\s*doi = {')
@@ -21,8 +24,8 @@ function! s:OpenUrl()
         silent execute '!open "' . l:url . '"'
     endif
 endfunction
-
-function! s:DisplayBibTeX(text, abstract)
+"}}}
+function! s:DisplayBibTeX(text, abstract) abort  "{{{
     let l:saveSearch = @/
     pedit BibTeX.bib
     wincmd P
@@ -49,8 +52,8 @@ function! s:DisplayBibTeX(text, abstract)
     nnoremap <silent><buffer> q :quit!<CR>
     let @/ = l:saveSearch
 endfunction
-
-function! s:GetBibTeX()
+"}}}
+function! s:GetBibTeX() abort  "{{{
     let l:nextItem = search('^\d\+\.\s', 'Wn')
     silent! -2
     if l:nextItem == 0
@@ -102,7 +105,20 @@ function! s:GetBibTeX()
         return
     endif
 endfunction
-
+"}}}
+function! s:SortDate() abort  "{{{
+    %substitute/$/#@!MyEoLsTrInG/
+    global/^\w/s/^/\r/
+    1move $
+    global/^\w/,/^$/-1join!
+    global/^$/d_
+    sort! /.\{-}(/
+    %substitute/#@!MyEoLsTrInG/\r/g
+    %substitute/\n\n\n/\r\r/
+    1
+endfunction
+"}}}
 nnoremap <silent><buffer> <CR> :call <SID>GetBibTeX()<CR>
 nnoremap <silent><buffer> <C-n> /^\d\+\.\s<CR>zz
 nnoremap <silent><buffer> <C-p> ?^\d\+\.\s<CR>zz
+command! -buffer SortDate :silent call <SID>SortDate()<CR>
