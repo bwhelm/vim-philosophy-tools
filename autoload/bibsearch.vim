@@ -7,9 +7,12 @@ scriptencoding utf-8
 let s:pythonPath = expand('<sfile>:p:h:h') . '/python/ppsearch.py'
 
 " Download bibtex citation info from DOI
-function! bibsearch#Doi2Bib() abort
+function! bibsearch#Doi2Bib( ... ) abort
     let l:saveSearch = @/
-    let l:doi = input('DOI: ')
+    let l:doi = join(a:000, '\\%20')
+    if l:doi ==# ''
+        let l:doi = input('DOI: ')
+    endif
     let l:doi = matchstr(l:doi, '^\s*\zs\S*\ze\s*$')  " Strip off spaces
     execute 'silent read !curl -sL "https://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
     " Because we need the year in curly braces....
@@ -46,4 +49,3 @@ function! bibsearch#ppsearch( ... ) abort
     silent set syntax=pandoc
     let @/ = l:saveSearch
 endfunction
-
