@@ -8,15 +8,20 @@ let s:pythonPath = expand('<sfile>:p:h:h') . '/python/ppsearch.py'
 
 " Download bibtex citation info from DOI
 function! bibsearch#Doi2Bib( ... ) abort
+    new
+    setlocal buftype=nofile bufhidden=hide noswapfile filetype=bib
     let l:saveSearch = @/
     let l:doi = join(a:000, '\\%20')
     if l:doi ==# ''
         let l:doi = input('DOI: ')
     endif
-    let l:doi = matchstr(l:doi, '^\s*\zs\S*\ze\s*$')  " Strip off spaces
+    let l:doi = trim(l:doi)  " Strip off spaces
     execute 'silent read !curl -sL "https://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
     " Because we need the year in curly braces....
-    silent! %substitute/year = \(\d\+\),/year = {\1},/ge
+    %substitute/year\s*=\s*\zs\(\d\+\),/{\1},/ge
+    if !search('doi\s*=\s*', 'w')  " Make sure we have a DOI line
+        call append(1, "\tdoi = {" . l:doi . "},% I added this!")
+    endif
     " Tidy BibTeX
     call misc#TidyBibTeX()
     silent 0,$yank *
@@ -43,7 +48,7 @@ function! bibsearch#ppsearch( ... ) abort
     let l:formattedText = system('python3 "' . s:pythonPath . '" ' . l:query)
     let l:formattedList = split(l:formattedText, '\n')
     call append(0, l:formattedList)
-    silent! %substitute/\$/\\$/g
+    %substitute/\$/\\$/ge
     0
     silent set filetype=ppsearch
     silent set syntax=pandoc
