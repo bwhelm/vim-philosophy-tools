@@ -20,7 +20,7 @@ function! bibsearch#Doi2Bib( ... ) abort
     " Because we need the year in curly braces....
     %substitute/year\s*=\s*\zs\(\d\+\),/{\1},/ge
     if !search('doi\s*=\s*', 'w')  " Make sure we have a DOI line
-        call append(1, "\tdoi = {" . l:doi . "},% I added this!")
+        call append(1, "\tdoi = {" . l:doi . "},")
     endif
     " Tidy BibTeX
     call misc#TidyBibTeX()
