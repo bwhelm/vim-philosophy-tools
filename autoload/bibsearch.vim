@@ -4,10 +4,27 @@ scriptencoding utf-8
 " ============================================================================
 
 " Path to python file that scrapes search data from philpapers.org
-let s:pythonPath = expand('<sfile>:p:h:h') . '/python/ppsearch.py'
+let s:pythonPath = expand('<sfile>:p:h:h')
+let s:ppSearchPath = s:pythonPath . '/python/ppsearch.py'
+let s:crossrefSearchPath = s:pythonPath . '/python/crossrefSearch.py'
+
+" Get DOI from author and title
+function! bibsearch#findDOI(query) abort  "{{{
+    if a:query == ""
+        let l:author = input('Author: ')
+        let l:title = input('Title: ')
+    else
+        let l:query = split(a:query)
+        let l:author = l:query[0]
+        let l:title = join(l:query[1:], ' ')
+    endif
+    let l:doi = system('python3 "' . s:crossrefSearchPath . '" "'
+                \ . l:author . '" "' . l:title . '"')
+    call bibsearch#Doi2Bib(l:doi)
+endfunction  "}}}
 
 " Download bibtex citation info from DOI
-function! bibsearch#Doi2Bib( ... ) abort
+function! bibsearch#Doi2Bib( ... ) abort  "{{{
     new
     setlocal buftype=nofile bufhidden=hide noswapfile filetype=bib
     let l:saveSearch = @/
@@ -23,15 +40,15 @@ function! bibsearch#Doi2Bib( ... ) abort
         call append(1, "\tdoi = {" . l:doi . "},")
     endif
     silent 0,$yank *
-    0
+    2
     " Set up mapping for BibTeX preview window to jump to url
     nnoremap <silent><buffer> gx :call misc#OpenUrl()<CR>
     nnoremap <silent><buffer> q :quit!<CR>
     let @/ = l:saveSearch
-endfunction
+endfunction  "}}}
 
 " Search philpapers.org, and return structured list of items.
-function! bibsearch#ppsearch( ... ) abort
+function! bibsearch#ppsearch( ... ) abort  "{{{
     let l:saveSearch = @/
     let l:query = join(a:000, '\\%20')
     if l:query ==# ''
@@ -46,7 +63,7 @@ function! bibsearch#ppsearch( ... ) abort
     endif
     let l:query = substitute(l:query, '\s\+', '\\%20', 'g')
     let l:query = substitute(l:query, '[''"]', '', 'g')
-    let l:formattedText = system('python3 "' . s:pythonPath . '" ' . l:query)
+    let l:formattedText = system('python3 "' . s:ppSearchPath . '" ' . l:query)
     let l:formattedList = split(l:formattedText, '\n')
     call append(0, l:formattedList)
     %substitute/\$/\\$/ge
@@ -54,7 +71,7 @@ function! bibsearch#ppsearch( ... ) abort
     silent set filetype=ppsearch
     silent set syntax=pandoc
     let @/ = l:saveSearch
-endfunction
+endfunction  "}}}
 
 function! s:getAbstract(abstractLine) abort  "{{{
     " This will pull the abstract from the current item.
@@ -63,7 +80,7 @@ function! s:getAbstract(abstractLine) abort  "{{{
     else
         return ''
     endif
-endfunction
+endfunction  "}}}
 "}}}
 function! s:DisplayBibTeX(text, abstract) abort  "{{{
     let l:saveSearch = @/
@@ -85,7 +102,7 @@ function! s:DisplayBibTeX(text, abstract) abort  "{{{
     nnoremap <silent><buffer> gx :call misc#OpenUrl()<CR>
     nnoremap <silent><buffer> q :quit!<CR>
     let @/ = l:saveSearch
-endfunction
+endfunction  "}}}
 "}}}
 function! bibsearch#GetBibTeX() abort  "{{{
     let l:nextItem = search('^\d\+\.\s', 'Wn')
@@ -138,5 +155,5 @@ function! bibsearch#GetBibTeX() abort  "{{{
         echohl None
         return
     endif
-endfunction
+endfunction  "}}}
 "}}}
