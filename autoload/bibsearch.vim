@@ -41,8 +41,6 @@ function! bibsearch#Doi2Bib( ... ) abort  "{{{
     endif
     silent 0,$yank *
     2
-    " Set up mapping for BibTeX preview window to jump to url
-    nnoremap <silent><buffer> gx :call misc#OpenUrl()<CR>
     nnoremap <silent><buffer> q :quit!<CR>
     let @/ = l:saveSearch
 endfunction  "}}}
@@ -105,6 +103,13 @@ function! s:DisplayBibTeX(text, abstract) abort  "{{{
 endfunction  "}}}
 "}}}
 function! bibsearch#GetBibTeX() abort  "{{{
+    " Move to top of current item and retrieve bibliographical data
+    normal! {j
+    if line('.') == 2
+        -1
+    endif
+    let l:bibLine = matchstr(getline('.'), '\d\+\. \zs.*')
+    " Find beginning line of next item
     let l:nextItem = search('^\d\+\.\s', 'Wn')
     silent! -2
     if l:nextItem == 0
@@ -150,9 +155,12 @@ function! bibsearch#GetBibTeX() abort  "{{{
         let l:url = substitute(l:url, '%26', '\&', 'g')
         execute('silent !open "' . l:url . '"')
     else
+        call s:DisplayBibTeX('', '')
         echohl WarningMsg
-        echom 'No data found.'
+        echom 'No data found. Trying http://glottotopia.org/doc2tex/doc2bib ...'
         echohl None
+        let @* = l:bibLine
+        silent !open http://glottotopia.org/doc2tex/doc2bib
         return
     endif
 endfunction  "}}}
