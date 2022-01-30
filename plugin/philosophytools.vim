@@ -8,4 +8,3 @@ let g:philosophytools#sep_tempfile = get(g:, 'philosophytools#sep_tempfile', '~/
 command! -nargs=* Doi2Bib :call bibsearch#Doi2Bib(<q-args>)
 command! -nargs=* PPSearch :call bibsearch#ppsearch(<q-args>)
 command! -nargs=1 SEPtoMarkdown :call SEPscrape#SEPtoMarkdown(<q-args>)
-command! -nargs=* BibFindDOI :call bibsearch#findDOI(<q-args>)

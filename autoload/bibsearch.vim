@@ -6,22 +6,6 @@ scriptencoding utf-8
 " Path to python file that scrapes search data from philpapers.org
 let s:pythonPath = expand('<sfile>:p:h:h')
 let s:ppSearchPath = s:pythonPath . '/python/ppsearch.py'
-let s:crossrefSearchPath = s:pythonPath . '/python/crossrefSearch.py'
-
-" Get DOI from author and title
-function! bibsearch#findDOI(query) abort  "{{{
-    if a:query == ""
-        let l:author = input('Author: ')
-        let l:title = input('Title: ')
-    else
-        let l:query = split(a:query)
-        let l:author = l:query[0]
-        let l:title = join(l:query[1:], ' ')
-    endif
-    let l:doi = system('python3 "' . s:crossrefSearchPath . '" "'
-                \ . l:author . '" "' . l:title . '"')
-    call bibsearch#Doi2Bib(l:doi)
-endfunction  "}}}
 
 " Download bibtex citation info from DOI
 function! bibsearch#Doi2Bib( ... ) abort  "{{{
@@ -33,6 +17,9 @@ function! bibsearch#Doi2Bib( ... ) abort  "{{{
         let l:doi = input('DOI: ')
     endif
     let l:doi = trim(l:doi)  " Strip off spaces
+    if l:doi =~ '^https:\/\/doi.org\/'  " If url, strip off first part
+        let l:doi = l:doi[16:]
+    endif
     execute 'silent read !curl -sL "https://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
     " Because we need the year in curly braces....
     %substitute/year\s*=\s*\zs\(\d\+\),/{\1},/ge
@@ -96,8 +83,6 @@ function! s:DisplayBibTeX(text, abstract) abort  "{{{
     endif
     silent 0,$yank *
     0
-    " Set up mapping for BibTeX preview window to jump to url
-    nnoremap <silent><buffer> gx :call misc#OpenUrl()<CR>
     nnoremap <silent><buffer> q :quit!<CR>
     let @/ = l:saveSearch
 endfunction  "}}}
@@ -157,7 +142,7 @@ function! bibsearch#GetBibTeX() abort  "{{{
     else
         call s:DisplayBibTeX('', '')
         echohl WarningMsg
-        echom 'No data found. Trying http://glottotopia.org/doc2tex/doc2bib ...'
+        echo 'No data found. Trying http://glottotopia.org/doc2tex/doc2bib ...'
         echohl None
         let @* = l:bibLine
         silent !open http://glottotopia.org/doc2tex/doc2bib
