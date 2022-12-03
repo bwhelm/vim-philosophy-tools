@@ -43,6 +43,10 @@ endfunction  "}}}
 
 " Search philpapers.org, and return structured list of items.
 function! bibsearch#ppsearch( ... ) abort  "{{{
+    " Open a new buffer only if current buffer is named or modified
+    if bufname() != '' || &modified == 1
+        new
+    endif
     let l:saveSearch = @/
     let l:query = join(a:000, '\\%20')
     if l:query ==# ''
