@@ -72,15 +72,17 @@ def printList(list):
                 item_abstract = ''
             try:
                 item_reference = item.find('div', {'class': 'options'}) \
-                        .find('a', {'class': '', 'rel': 'nofollow'})['href']
+                        .find('a', {'class': 'outLink', 'rel': 'nofollow'})['href']
                 # Strip off initial philpapers.org href; use ":" and "/"
                 item_reference = \
                     item_reference[item_reference.find('http', 5):] \
                     .replace('%3A', ':').replace('%2F', '/')
-                if 'jstor.org' in item_reference:
+                if 'doi.org' in item_reference:
+                    item_reference = sub('https?://(dx.)?doi.org/', '',
+                                         item_reference, flags=IGNORECASE)
+                    item_reference = '\t**DOI:** ' + item_reference + '\n'
+                elif 'jstor.org' in item_reference:
                     item_reference = '\t**J-Stor:** <' + item_reference + '>\n'
-                elif 'doi.org' in item_reference:
-                    item_reference = '\t**DOI:** ' + item_reference[18:] + '\n'
                 elif item_reference == 'w':
                     item_reference = ''
                 else:
@@ -102,8 +104,8 @@ def printList(list):
             text += str(counter) + '. ' + item_name + ' (' + item_pubYear
             text += '). ' + item_title + ' ' + item_pubInfo + '\n'
             text += item_abstract
-            text += '\t**PP_ID:** ' + item_id + '\n'
             text += item_reference
+            text += '\t**PP_ID:** ' + item_id + '\n'
             text += '\n'
     return text
 
