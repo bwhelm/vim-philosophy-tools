@@ -102,6 +102,7 @@ def printList(list):
             text += str(counter) + '. ' + item_name + ' (' + item_pubYear
             text += '). ' + item_title + ' ' + item_pubInfo + '\n'
             text += item_abstract
+            text += '\t**PP_ID:** ' + item_id + '\n'
             text += item_reference
             text += '\n'
     return text

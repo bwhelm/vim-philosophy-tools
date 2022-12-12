@@ -140,6 +140,7 @@ function! bibsearch#GetBibTeX() abort  "{{{
     let l:doiLine = search('^\s*\*\*DOI:', 'Wn')
     let l:ppLine = search('^\s*\*\*PP:\*\*', 'Wn')
     let l:urlLine = search('^\s*\*\*URL:', 'Wn')
+    let l:ppidLine = search('^\s*\*\*PP_ID:\*\*', 'Wn')
     silent! +2
     if l:jstorLine > 0 && l:jstorLine < l:nextItem
         let l:abstract = s:getAbstract(l:jstorLine - 1)
@@ -164,6 +165,13 @@ function! bibsearch#GetBibTeX() abort  "{{{
         let l:url = substitute(l:url, '%3d', '=', 'g')
         let l:url = substitute(l:url, '%26', '\&', 'g')
         execute('silent !open "' . l:url . '"')
+    elseif l:ppidLine > 0 && l:ppidLine < l:nextItem
+        let l:ppid = getline(l:ppidLine)[12:]
+        let l:abstract = s:getAbstract(l:ppidLine - 1)
+        let l:text = system('curl ' . s:curlOpt . ' "https://philpapers.org/export.html?__format=bib&eIds=' . l:ppid . '&formatName=BibTeX"')
+        " let l:doi = 
+        let l:text = substitute(l:text, '.*<pre class=''export''>\(@.*\)\n</pre>\_.*', '\1', '')
+        call s:DisplayBibTeX(l:text, l:abstract)
     else
         call s:DisplayBibTeX('', '')
         echohl WarningMsg
