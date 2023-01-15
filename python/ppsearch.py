@@ -67,7 +67,7 @@ def printList(list):
                 # Substitution below to prevent spurious italics/boldface in
                 # markdown.
                 item_abstract = item_abstract.replace('_', '')
-                item_abstract = '\t**Abstract:** ' + item_abstract + '\n'
+                item_abstract = '    ABSTRACT: ' + item_abstract + '\n'
             except (TypeError, AttributeError):
                 item_abstract = ''
             try:
@@ -80,9 +80,9 @@ def printList(list):
                 if 'doi.org' in item_reference:
                     item_reference = sub('https?://(dx.)?doi.org/', '',
                                          item_reference, flags=IGNORECASE)
-                    item_reference = '\t**DOI:** ' + item_reference + '\n'
+                    item_reference = '    DOI: ' + item_reference + '\n'
                 elif 'jstor.org' in item_reference:
-                    item_reference = '\t**J-Stor:** <' + item_reference + '>\n'
+                    item_reference = '    J-STOR: <' + item_reference + '>\n'
                 elif item_reference == 'w':
                     item_reference = ''
                 else:
@@ -96,8 +96,8 @@ def printList(list):
                     item_bibtex = 'https://philpapers.org/export.html?' \
                                   + '__format=bib&eId=' + item_id \
                                   + '&formatName=BibTeX'
-                    item_reference = '\t**PP:** <' + item_bibtex + '>\n' \
-                                     + '\t**URL:** <' + item_reference + '>\n'
+                    item_reference = '    PP: <' + item_bibtex + '>\n' \
+                                     + '    URL: <' + item_reference + '>\n'
             except (TypeError, AttributeError):
                 item_reference = ''
             # Now construct the reference the way I want it....
@@ -105,7 +105,7 @@ def printList(list):
             text += '). ' + item_title + ' ' + item_pubInfo + '\n'
             text += item_abstract
             text += item_reference
-            text += '\t**PP_ID:** ' + item_id + '\n'
+            text += '    PP_ID: ' + item_id + '\n'
             text += '\n'
     return text
 

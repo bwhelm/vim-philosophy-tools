@@ -71,10 +71,17 @@ function! bibsearch#ppsearch( ... ) abort  "{{{
     let @/ = l:saveSearch
 endfunction  "}}}
 
+function! s:getAuthorTitle() abort  " {{{
+    call search('^\d\+\.\s*', 'bcW')
+    let l:bibline = getline('.')  " Should be the line with author, title data in it.
+    let l:author = matchstr(l:bibline, '^\d\+\.\s*\zs.\{-}\ze(\d\+)\.')
+    let l:title = matchstr(l:bibline, '(\d\+)\. \zs[^.]*')
+    return [l:author, l:title]
+endfunction " }}}
 function! s:getAbstract(abstractLine) abort  "{{{
     " This will pull the abstract from the current item.
-    if getline(a:abstractLine) =~# '\*\*Abstract:'
-        return getline(a:abstractLine)[15:]
+    if getline(a:abstractLine) =~# '    ABSTRACT:'
+        return getline(a:abstractLine)[14:]
     else
         return ''
     endif
@@ -136,50 +143,88 @@ function! bibsearch#GetBibTeX() abort  "{{{
     if l:nextItem == 0
         let l:nextItem = 9999
     endif
-    let l:jstorLine = search('^\s*\*\*J-Stor:\*\*', 'Wn')
-    let l:doiLine = search('^\s*\*\*DOI:', 'Wn')
-    let l:ppLine = search('^\s*\*\*PP:\*\*', 'Wn')
-    let l:urlLine = search('^\s*\*\*URL:', 'Wn')
-    let l:ppidLine = search('^\s*\*\*PP_ID:\*\*', 'Wn')
+    let l:jstorLine = search('^    J-STOR:', 'Wn')
+    let l:doiLine = search('^    DOI:', 'Wn')
+    let l:ppLine = search('^    PP:', 'Wn')
+    let l:urlLine = search('^    URL:', 'Wn')
+    let l:ppidLine = search('^    PP_ID:', 'Wn')
     silent! +2
     if l:jstorLine > 0 && l:jstorLine < l:nextItem
         let l:abstract = s:getAbstract(l:jstorLine - 1)
-        let l:jstorUrl = getline(l:jstorLine)[14:-2]
+        let l:jstorUrl = getline(l:jstorLine)[13:-2]
         let l:text = <SID>getJStor(l:jstorUrl)
         call s:DisplayBibTeX(l:text, l:abstract)
     elseif l:doiLine > 0 && l:doiLine < l:nextItem
         let l:abstract = s:getAbstract(l:doiLine - 1)
-        let l:doi = getline(l:doiLine)[10:]
+        let l:doi = getline(l:doiLine)[9:]
         let l:url = 'http://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex'
         let l:text = system('curl ' . s:curlOpt . ' "' . l:url . '"')
         call s:DisplayBibTeX(l:text, l:abstract)
     elseif l:ppLine > 0 && l:ppLine < l:nextItem
         let l:abstract = s:getAbstract(l:ppLine - 1)
-        let l:ppUrl = getline(l:ppLine)[10:-2]
+        let l:ppUrl = getline(l:ppLine)[9:-2]
         let l:text = system('curl ' . s:curlOpt . ' "' . l:ppUrl . '"')
         let l:text = substitute(l:text, '.*<pre class=''export''>\(@.*\)\n</pre>\_.*', '\1', '')
         call s:DisplayBibTeX(l:text, l:abstract)
     elseif l:urlLine > 0 && l:urlLine < l:nextItem
-        let l:url = getline(l:urlLine)[11:-2]
+        let l:url = getline(l:urlLine)[10:-2]
         let l:url = substitute(l:url, '%3f', '?', 'g')
         let l:url = substitute(l:url, '%3d', '=', 'g')
         let l:url = substitute(l:url, '%26', '\&', 'g')
+        let l:url = substitute(l:url, '%', '\\%', 'g')
         execute('silent !open "' . l:url . '"')
     elseif l:ppidLine > 0 && l:ppidLine < l:nextItem
-        let l:ppid = getline(l:ppidLine)[12:]
+        let l:ppid = getline(l:ppidLine)[11:]
         let l:abstract = s:getAbstract(l:ppidLine - 1)
         let l:text = system('curl ' . s:curlOpt . ' "https://philpapers.org/export.html?__format=bib&eIds=' . l:ppid . '&formatName=BibTeX"')
-        " let l:doi = 
         let l:text = substitute(l:text, '.*<pre class=''export''>\(@.*\)\n</pre>\_.*', '\1', '')
         call s:DisplayBibTeX(l:text, l:abstract)
     else
-        call s:DisplayBibTeX('', '')
         echohl WarningMsg
-        echo 'No data found. Trying http://glottotopia.org/doc2tex/doc2bib ...'
+        echo 'No data found. Trying Citoid ...'
         echohl None
-        let @* = l:bibLine
-        silent !open http://glottotopia.org/doc2tex/doc2bib
+        let [l:author, l:title] = <SID>getAuthorTitle()
+        let l:author = escape(<SID>urlEncode(l:author), '%')
+        let l:title = escape(<SID>urlEncode(l:title), '%')
+        let l:abstract = <SID>getAbstract(line('.') + 1)
+        let l:text = system("curl -sLX 'GET' 'https://en.wikipedia.org/api/rest_v1/data/citation/bibtex/" . l:author . l:title . "' -H 'accept: application/json; charset=utf-8;'")
+        call s:DisplayBibTeX(l:text, l:abstract)
         return
     endif
 endfunction  "}}}
+" The following two functions are slightly modified from:
+" http://www.danielbigham.ca/cgi-bin/document.pl?mode=Display&DocumentID=1053
+function! s:urlEncode(string)
+    " URL encode a string. ie. Percent-encode characters as necessary.
+    let result = ""
+    let characters = split(a:string, '.\zs')
+    for character in characters
+        if <SID>characterRequiresUrlEncoding(character)
+            let i = 0
+            while i < strlen(character)
+                let byte = strpart(character, i, 1)
+                let decimal = char2nr(byte)
+                let result = result . "%" . printf("%02x", decimal)
+                let i += 1
+            endwhile
+        else
+            let result = result . character
+        endif
+    endfor
+    return result
+endfunction
+function! s:characterRequiresUrlEncoding(character)
+    " Returns 1 if the given character should be percent-encoded in a URL encoded string.
+    let ascii_code = char2nr(a:character)
+    if ascii_code >= 48 && ascii_code <= 57
+        return 0
+    elseif ascii_code >= 65 && ascii_code <= 90
+        return 0
+    elseif ascii_code >= 97 && ascii_code <= 122
+        return 0
+    elseif a:character == "-" || a:character == "_" || a:character == "." || a:character == "~"
+        return 0
+    endif
+    return 1
+endfunction
 "}}}
