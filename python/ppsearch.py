@@ -16,8 +16,7 @@ query = '%20'.join(argv[1:])
 pageUrl = 'https://philpapers.org/s/' + query
 page = get(pageUrl)
 soup = bs(page.text, 'html.parser')
-list = soup.table.ol
-
+list = soup.find('ol', class_='entryList')
 
 def printList(list):
     counter = 0
