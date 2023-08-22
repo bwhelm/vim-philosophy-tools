@@ -164,7 +164,7 @@ function! bibsearch#GetBibTeX() abort  "{{{
         let l:abstract = s:getAbstract(l:ppLine - 1)
         let l:ppUrl = getline(l:ppLine)[9:-2]
         let l:text = system('curl ' . s:curlOpt . ' "' . l:ppUrl . '"')
-        let l:text = substitute(l:text, '.*<pre class=''export''>\(@.*\)\n</pre>\_.*', '\1', '')
+        let l:text = substitute(l:text, '\_.*<pre class="export">\(@.*\)\n</pre>\_.*', '\1', '')
         call s:DisplayBibTeX(l:text, l:abstract)
     elseif l:urlLine > 0 && l:urlLine < l:nextItem
         let l:url = getline(l:urlLine)[10:-2]
@@ -177,7 +177,7 @@ function! bibsearch#GetBibTeX() abort  "{{{
         let l:ppid = getline(l:ppidLine)[11:]
         let l:abstract = s:getAbstract(l:ppidLine - 1)
         let l:text = system('curl ' . s:curlOpt . ' "https://philpapers.org/export.html?__format=bib&eIds=' . l:ppid . '&formatName=BibTeX"')
-        let l:text = substitute(l:text, '.*<pre class=''export''>\(@.*\)\n</pre>\_.*', '\1', '')
+        let l:text = substitute(l:text, '.*<pre class="export">\(@.*\)\n</pre>\_.*', '\1', '')
         call s:DisplayBibTeX(l:text, l:abstract)
     else
         echohl WarningMsg
