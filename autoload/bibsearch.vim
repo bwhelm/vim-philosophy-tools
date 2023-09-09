@@ -109,7 +109,7 @@ endfunction  "}}}
 "}}}
 function! bibsearch#GetJStor(args) abort  "{{{
     if a:args !=# ""
-        let l:jstorUrl = trim(join(a:000, ' '))
+        let l:jstorUrl = trim(a:args)
     else
         let l:jstorUrl = input('J-Stor URL: ')
         let l:jstorUrl = trim(l:jstorUrl)
