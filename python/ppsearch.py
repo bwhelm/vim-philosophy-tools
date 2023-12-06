@@ -39,7 +39,12 @@ def printList(list):
                                                 {'class':
                                                  'articleTitle recTitle'}).text
             except (TypeError, AttributeError):
-                item_title = ''
+                try:
+                    item_title = '*' + item_citation.find('span',
+                                                    {'class':
+                                                     'articleTitle pub_name recTitle'}).text + '*'
+                except (TypeError, AttributeError):
+                    item_title = ''
             try:
                 item_name = item_citation.find('span', {'class': 'name'}).text
             except (TypeError, AttributeError):
