@@ -35,9 +35,9 @@ def printList(list):
             except (TypeError, AttributeError):
                 item_citation = ''
             try:
-                item_title = item_citation.find('span',
+                item_title = '"' + item_citation.find('span',
                                                 {'class':
-                                                 'articleTitle recTitle'}).text
+                                                 'articleTitle recTitle'}).text + '"'
             except (TypeError, AttributeError):
                 try:
                     item_title = '*' + item_citation.find('span',
@@ -58,6 +58,8 @@ def printList(list):
                 item_pubInfo = ''.join([str(tag) for tag in
                                        item.find('span',
                                                  {'class': 'pubInfo'})]) \
+                    .replace('<i class="pubName">', '*') \
+                    .replace('</i>', '*') \
                     .replace('<em class="pubName">', '*') \
                     .replace('<em>', '*') \
                     .replace('</em>', '*')

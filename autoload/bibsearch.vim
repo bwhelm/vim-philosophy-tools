@@ -101,7 +101,7 @@ function! s:DisplayBibTeX(text, abstract) abort  "{{{
         let l:textList = split(l:text, '\ze\s\+[A-z]\+=')     " Split into lines
     endif
     " " Tidy up the list?
-    " call map(l:textList, {key, val -> substitute(val, '^ ', '  ', '')})
+    " call map(l:textList, {key, val -> substitute(val, '^ \+', '  ', '')})
     " call map(l:textList, {key, val -> substitute(val, '={', ' = {', '')})
     silent call append(0, l:textList)
     0
