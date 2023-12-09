@@ -36,13 +36,11 @@ def printList(list):
                 item_citation = ''
             try:
                 item_title = '"' + item_citation.find('span',
-                                                {'class':
-                                                 'articleTitle recTitle'}).text + '"'
+                                          {'class': 'articleTitle recTitle'}).text + '"'
             except (TypeError, AttributeError):
                 try:
                     item_title = '*' + item_citation.find('span',
-                                                    {'class':
-                                                     'articleTitle pub_name recTitle'}).text + '*'
+                                          {'class': 'articleTitle pub_name recTitle'}).text + '*'
                 except (TypeError, AttributeError):
                     item_title = ''
             try:
@@ -50,8 +48,7 @@ def printList(list):
             except (TypeError, AttributeError):
                 item_name = ''
             try:
-                item_pubYear = item_citation.find('span', {'class':
-                                                  'pubYear'}).text
+                item_pubYear = item_citation.find('span', {'class': 'pubYear'}).text
             except (TypeError, AttributeError):
                 item_pubYear = ''
             try:
