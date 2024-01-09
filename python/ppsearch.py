@@ -70,6 +70,7 @@ def printList(list):
                 # Substitution below to prevent spurious italics/boldface in
                 # markdown.
                 item_abstract = item_abstract.replace('_', '')
+                item_abstract = item_abstract.strip()  # Strip off extra spaces
                 item_abstract = '    ABSTRACT: ' + item_abstract + '\n'
             except (TypeError, AttributeError):
                 item_abstract = ''
