@@ -97,9 +97,7 @@ def printList(list):
                     item_reference = sub('%26', '&', item_reference,
                                          flags=IGNORECASE)
                     # philpapers.org's BibTeX page
-                    item_bibtex = 'https://philpapers.org/export.html?' \
-                                  + '__format=bib&eId=' + item_id \
-                                  + '&formatName=BibTeX'
+                    item_bibtex = 'https://philpapers.org/rec/' + item_id
                     item_reference = '    PP: <' + item_bibtex + '>\n' \
                                      + '    URL: <' + item_reference + '>\n'
             except (TypeError, AttributeError):

@@ -172,7 +172,7 @@ function! bibsearch#GetBibTeX() abort  "{{{
         let l:abstract = s:getAbstract(l:ppLine - 1)
         let l:ppUrl = getline(l:ppLine)[9:-2]
         let l:text = system('curl ' . s:curlOpt . ' "' . l:ppUrl . '"')
-        let l:text = substitute(l:text, '\_.*<pre class="export">\(@.*\)\n</pre>\_.*', '\1', '')
+        let l:text = substitute(l:text, '\_.*<meta name="citation_format_bib" content="\(@\_.*\)\n">\_.*', '\1', '')
         call s:DisplayBibTeX(l:text, l:abstract)
     elseif l:urlLine > 0 && l:urlLine < l:nextItem
         let l:url = getline(l:urlLine)[10:-2]
@@ -200,7 +200,7 @@ function! bibsearch#GetBibTeX() abort  "{{{
         return
     endif
 endfunction  "}}}
-" The following two functions are slightly modified from:
+" The following two functions are slightly modified from: {{{
 " http://www.danielbigham.ca/cgi-bin/document.pl?mode=Display&DocumentID=1053
 function! s:urlEncode(string)
     " URL encode a string. ie. Percent-encode characters as necessary.
