@@ -96,10 +96,9 @@ def printList(list):
                                          flags=IGNORECASE)
                     item_reference = sub('%26', '&', item_reference,
                                          flags=IGNORECASE)
-                    # philpapers.org's BibTeX page
+                    # philpapers.org's page for article
                     item_bibtex = 'https://philpapers.org/rec/' + item_id
-                    item_reference = '    PP: <' + item_bibtex + '>\n' \
-                                     + '    URL: <' + item_reference + '>\n'
+                    item_reference = '    URL: <' + item_reference + '>\n'
             except (TypeError, AttributeError):
                 item_reference = ''
             # Now construct the reference the way I want it....
@@ -107,7 +106,7 @@ def printList(list):
             text += '). ' + item_title + ' ' + item_pubInfo + '\n'
             text += item_abstract
             text += item_reference
-            text += '    PP_ID: ' + item_id + '\n'
+            text += '    PP: <https://philpapers.org/rec/' + item_id + '>\n'
             text += '\n'
     return text
 
