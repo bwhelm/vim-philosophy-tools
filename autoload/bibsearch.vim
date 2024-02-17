@@ -65,7 +65,7 @@ function! bibsearch#ppsearch( ... ) abort  "{{{
     let l:formattedList = split(l:formattedText, '\n')
     call append(0, l:formattedList)
     %substitute/\$/\\$/ge
-    0
+    1
     silent set filetype=ppsearch
     silent set syntax=pandoc
     let @/ = l:saveSearch
@@ -96,6 +96,7 @@ function! s:DisplayBibTeX(text, abstract) abort  "{{{
     setlocal nowrap
     let l:text = trim(a:text, ' ')
     let l:text = substitute(l:text, '} }\n\?$', '}}', '')  " Clean end of entry
+    let l:text = substitute(l:text, '}\n$', '}', '')  " Clean it also if only on final '}'
     let l:textList = split(l:text, '\n')
     if len(l:textList) == 1  " Failed to split, so it's all on one line
         let l:textList = split(l:text, '\ze\s\+[A-z]\+=')     " Split into lines
@@ -104,13 +105,12 @@ function! s:DisplayBibTeX(text, abstract) abort  "{{{
     " call map(l:textList, {key, val -> substitute(val, '^ \+', '  ', '')})
     " call map(l:textList, {key, val -> substitute(val, '={', ' = {', '')})
     silent call append(0, l:textList)
-    0
     " Add abstract from philpapers.org only if there is not one already
     if a:abstract !=# '' && !search('^\s*abstract = {', 'n')
         call append(1, " abstract = {" . a:abstract . '},')
     endif
-    silent 0,$yank *
-    0
+    silent 1,$yank *
+    1
     nnoremap <silent><buffer> q :quit!<CR>
     let @/ = l:saveSearch
 endfunction  "}}}
