@@ -6,10 +6,11 @@
 # This takes a search query, scrapes search results from http://philpapers.org,
 # and formats and prints those results.
 
-from requests import get
 from bs4 import BeautifulSoup as bs
-from sys import argv
 from re import sub, IGNORECASE
+from requests import get
+from sys import argv
+import subprocess
 
 query = '%20'.join(argv[1:])
 
@@ -52,14 +53,28 @@ def printList(list):
             except (TypeError, AttributeError):
                 item_pubYear = ''
             try:
-                item_pubInfo = ''.join([str(tag) for tag in
+                # NEW VERSION: try using pandoc to convert from html to markdown
+                tempText = ''.join([str(tag) for tag in
                                        item.find('span',
-                                                 {'class': 'pubInfo'})]) \
-                    .replace('<i class="pubName">', '*') \
-                    .replace('</i>', '*') \
-                    .replace('<em class="pubName">', '*') \
-                    .replace('<em>', '*') \
-                    .replace('</em>', '*')
+                                                 {'class': 'pubInfo'})])
+                pandocCmd = subprocess.Popen(['/opt/homebrew/bin/pandoc',
+                                                 '-f', 'html', '-t',
+                                                 'markdown'],
+                                                text=True,
+                                                stdin=subprocess.PIPE,
+                                                stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE)
+                item_pubInfo = pandocCmd.communicate(input=tempText)[0][:-1]
+                # # OLD VERSION: just use html text, with some simple mods
+                # item_pubInfo = ''.join([str(tag) for tag in
+                #                        item.find('span',
+                #                                  {'class': 'pubInfo'})]) \
+                #     .replace('<i class="pubName">', '*') \
+                #     .replace('<i>', '*') \
+                #     .replace('</i>', '*') \
+                #     .replace('<em class="pubName">', '*') \
+                #     .replace('<em>', '*') \
+                #     .replace('</em>', '*')
             except (TypeError, AttributeError):
                 item_pubInfo = ''
             try:
@@ -85,8 +100,6 @@ def printList(list):
                     item_reference = sub('https?://(dx.)?doi.org/', '',
                                          item_reference, flags=IGNORECASE)
                     item_reference = '    DOI: ' + item_reference + '\n'
-                elif 'jstor.org' in item_reference:
-                    item_reference = '    J-STOR: <' + item_reference + '>\n'
                 elif item_reference == 'w':
                     item_reference = ''
                 else:
@@ -97,7 +110,6 @@ def printList(list):
                     item_reference = sub('%26', '&', item_reference,
                                          flags=IGNORECASE)
                     # philpapers.org's page for article
-                    item_bibtex = 'https://philpapers.org/rec/' + item_id
                     item_reference = '    URL: <' + item_reference + '>\n'
             except (TypeError, AttributeError):
                 item_reference = ''
