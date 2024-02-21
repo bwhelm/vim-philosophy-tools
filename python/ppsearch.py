@@ -11,6 +11,7 @@ from re import sub, IGNORECASE
 from requests import get
 from sys import argv
 import subprocess
+import re
 
 query = '%20'.join(argv[1:])
 
@@ -18,6 +19,17 @@ pageUrl = 'https://philpapers.org/s/' + query
 page = get(pageUrl)
 soup = bs(page.text, 'html.parser')
 list = soup.find('ol', class_='entryList')
+
+
+def pandocConvert(text, toFormat):
+    pandocCmd = subprocess.Popen(['/opt/homebrew/bin/pandoc',
+                                  '-f', 'html', '-t', toFormat],
+                                 text=True,
+                                 stdin=subprocess.PIPE,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+    return pandocCmd.communicate(input=text)[0][:-1]
+
 
 def printList(list):
     counter = 0
@@ -53,28 +65,29 @@ def printList(list):
             except (TypeError, AttributeError):
                 item_pubYear = ''
             try:
-                # NEW VERSION: try using pandoc to convert from html to markdown
-                tempText = ''.join([str(tag) for tag in
-                                       item.find('span',
-                                                 {'class': 'pubInfo'})])
-                pandocCmd = subprocess.Popen(['/opt/homebrew/bin/pandoc',
-                                                 '-f', 'html', '-t',
-                                                 'markdown'],
-                                                text=True,
-                                                stdin=subprocess.PIPE,
-                                                stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE)
-                item_pubInfo = pandocCmd.communicate(input=tempText)[0][:-1]
-                # # OLD VERSION: just use html text, with some simple mods
-                # item_pubInfo = ''.join([str(tag) for tag in
+                # # NEW VERSION: try using pandoc to convert from html to markdown
+                # tempText = ''.join([str(tag) for tag in
                 #                        item.find('span',
-                #                                  {'class': 'pubInfo'})]) \
-                #     .replace('<i class="pubName">', '*') \
-                #     .replace('<i>', '*') \
-                #     .replace('</i>', '*') \
-                #     .replace('<em class="pubName">', '*') \
-                #     .replace('<em>', '*') \
-                #     .replace('</em>', '*')
+                #                                  {'class': 'pubInfo'})])
+                # item_pubInfo = pandocConvert(tempText, 'markdown')
+
+                # OLD VERSION: just use html text, with some simple mods
+                item_pubInfo = ''.join([str(tag) for tag in
+                                       item.find('span',
+                                                 {'class': 'pubInfo'})]) \
+                    .replace('<i class="pubName">', '*') \
+                    .replace('<em class="pubName">', '*') \
+                    .replace('<em>', '*') \
+                    .replace('</em>', '*')
+                # Adjust links: `<i><a href="URL">Title of Book</a></i>`
+                #     ==> `*Title of Book* (<URL>)`
+                item_pubInfo = re.sub(r'<i><a href="([^"]*)">(.+?)</a></i>',
+                                      '*\\2* (<\\1>)', item_pubInfo)
+                item_pubInfo = re.sub(r'<a href="([^"]*)">(.+?)</a>',
+                                      '\\2 (<\\1>)', item_pubInfo)
+                # Change `<i>...</i>` to `*...*`
+                item_pubInfo = item_pubInfo.replace('<i>', '*') \
+                        .replace('</i>', '*')
             except (TypeError, AttributeError):
                 item_pubInfo = ''
             try:
@@ -86,6 +99,7 @@ def printList(list):
                 # markdown.
                 item_abstract = item_abstract.replace('_', '')
                 item_abstract = item_abstract.strip()  # Strip off extra spaces
+                # item_abstract = pandocConvert(item_abstract, 'latex')
                 item_abstract = '    ABSTRACT: ' + item_abstract + '\n'
             except (TypeError, AttributeError):
                 item_abstract = ''
