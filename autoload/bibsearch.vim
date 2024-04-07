@@ -29,14 +29,18 @@ function! bibsearch#Doi2Bib( ... ) abort  "{{{
     if l:doi =~ '^https:\/\/doi.org\/'  " If url, strip off first part
         let l:doi = l:doi[16:]
     endif
-    execute 'silent read !curl -sL "https://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
+    execute 'silent 0read !curl -sL "https://api.crossref.org/works/' . l:doi . '/transform/application/x-bibtex"'
     " Because we need the year in curly braces....
     %substitute/year\s*=\s*\zs\(\d\+\),/{\1},/ge
     if !search('doi\s*=\s*', 'w')  " Make sure we have a DOI line
         call append(1, "\tdoi = {" . l:doi . "},")
     endif
-    silent 0,$yank *
-    2
+    " Get rid of initial spaces
+    %substitute/^\s\+@/@/e
+    " Spread out entry across multiple lines if needed
+    %substitute/,\s*\(\w*\)\s*=\s*/,\r  \1 = /ge
+    1
+    silent 1,$yank *
     nnoremap <silent><buffer> q :quit!<CR>
     let @/ = l:saveSearch
 endfunction  "}}}
@@ -61,7 +65,8 @@ function! bibsearch#ppsearch( ... ) abort  "{{{
     endif
     let l:query = substitute(l:query, '\s\+', '\\%20', 'g')
     let l:query = substitute(l:query, '[''"]', '', 'g')
-    let l:formattedText = system('python3 "' . s:ppSearchPath . '" ' . l:query)
+    let l:pipenv = executable('pipenv') ? "pipenv run" : ""
+    let l:formattedText = system(l:pipenv . ' python3 "' . s:ppSearchPath . '" ' . l:query)
     let l:formattedList = split(l:formattedText, '\n')
     call append(0, l:formattedList)
     %substitute/\$/\\$/ge
