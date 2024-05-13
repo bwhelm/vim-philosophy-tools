@@ -15,8 +15,15 @@ import re
 
 query = '%20'.join(argv[1:])
 
+# Note: PhilPapers.org seems to require a real web browser. I'm working around
+# this by using the following headers to pretend to be a Mac browser.
+headers = {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5)",
+           "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+           "accept-charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3",
+           "accept-language": "en-US,en;q=0.8"}
+
 pageUrl = 'https://philpapers.org/s/' + query
-page = get(pageUrl)
+page = get(pageUrl, headers=headers)
 soup = bs(page.text, 'html.parser')
 list = soup.find('ol', class_='entryList')
 
