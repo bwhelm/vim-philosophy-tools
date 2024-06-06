@@ -72,7 +72,7 @@ function! bibsearch#ppsearch( ... ) abort  "{{{
     %substitute/\$/\\$/ge
     1
     silent set filetype=ppsearch
-    silent set syntax=pandoc
+    silent set syntax=markdown
     let @/ = l:saveSearch
 endfunction  "}}}
 
