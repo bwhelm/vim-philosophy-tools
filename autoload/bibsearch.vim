@@ -100,6 +100,9 @@ function! s:DisplayBibTeX(text, abstract) abort  "{{{
     setlocal buftype=nofile filetype=bib
     setlocal nowrap
     let l:text = trim(a:text, ' ')
+    " HTML codes -> LaTeX
+    let l:text = substitute(l:text, '&amp;', '\\\&', 'g')
+
     let l:text = substitute(l:text, '} }\n\?$', '}}', '')  " Clean end of entry
     let l:text = substitute(l:text, '}\n$', '}', '')  " Clean it also if only on final '}'
     let l:textList = split(l:text, '\n')
