@@ -12,6 +12,11 @@ from requests import get
 from sys import argv
 import subprocess
 import re
+from nameparser import HumanName
+from nameparser.config import CONSTANTS
+
+# Format for names (from nameparser)
+CONSTANTS.string_format = "{last}, {first} {middle} {suffix}"
 
 query = '%20'.join(argv[1:])
 
@@ -64,7 +69,9 @@ def printList(list):
                 except (TypeError, AttributeError):
                     item_title = ''
             try:
-                item_name = item_citation.find('span', {'class': 'name'}).text
+                human_name = HumanName(item_citation.find('span', {'class':
+                                                                   'name'}).text)
+                item_name = str(human_name)
             except (TypeError, AttributeError):
                 item_name = ''
             try:
