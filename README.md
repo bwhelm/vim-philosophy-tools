@@ -11,8 +11,9 @@ This vim plugin exposes several commands:
     - `<CR>` will attempt to download BibTeX citation info from an available
       DOI (using `crossref.org`) or from J-Stor. Note that this is highly
       dependent on the webpage returned from `philpapers.org`.
-    - `<LocalLeader>n` will sort entries by author's name.
     - `<LocalLeader>d` will sort entries by date (in reverse order).
+    - `<LocalLeader>n` will sort entries by author's name.
+    - `<LocalLeader>o` will sort entries in original PhilPapers order.
     - `<C-n>` and `<C-p>` will jump to the next/previous entries, keeping the
       current entry at the middle of the screen.
 

@@ -8,6 +8,7 @@ nnoremap <silent><buffer> <C-n> /^\d\+\.\s<CR>zz
 nnoremap <silent><buffer> <C-p> ?^\d\+\.\s<CR>zz
 nnoremap <silent><buffer> <LocalLeader>d :call <SID>sortParagraphs('sort! r /(\d\+)/')<CR>
 nnoremap <silent><buffer> <LocalLeader>n :call <SID>sortParagraphs('sort /\d\+\./')<CR>
+nnoremap <silent><buffer> <LocalLeader>o :call <SID>sortParagraphs('sort n')<CR>
 
 function! s:sortParagraphs(sort) abort  " {{{
     let l:saveLine = getline('.')
