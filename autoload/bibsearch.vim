@@ -65,8 +65,7 @@ function! bibsearch#ppsearch( ... ) abort  "{{{
     endif
     let l:query = substitute(l:query, '\s\+', '\\%20', 'g')
     let l:query = substitute(l:query, '[''"]', '', 'g')
-    let l:pipenv = executable('pipenv') ? "pipenv run " : ""
-    let l:formattedText = system(l:pipenv . 'python3 "' . s:ppSearchPath . '" ' . l:query)
+    let l:formattedText = system('/usr/bin/env python3 "' . s:ppSearchPath . '" ' . l:query)
     let l:formattedList = split(l:formattedText, '\n')
     call append(0, l:formattedList)
     %substitute/\$/\\$/ge
