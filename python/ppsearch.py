@@ -33,14 +33,14 @@ soup = bs(page.text, 'html.parser')
 list = soup.find('ol', class_='entryList')
 
 
-def pandocConvert(text, toFormat):
-    pandocCmd = subprocess.Popen(['/opt/homebrew/bin/pandoc',
-                                  '-f', 'html', '-t', toFormat],
-                                 text=True,
-                                 stdin=subprocess.PIPE,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-    return pandocCmd.communicate(input=text)[0][:-1]
+# def pandocConvert(text, toFormat):
+#     pandocCmd = subprocess.Popen(['/opt/homebrew/bin/pandoc',
+#                                   '-f', 'html', '-t', toFormat],
+#                                  text=True,
+#                                  stdin=subprocess.PIPE,
+#                                  stdout=subprocess.PIPE,
+#                                  stderr=subprocess.PIPE)
+#     return pandocCmd.communicate(input=text)[0][:-1]
 
 
 def printList(list):

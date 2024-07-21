@@ -6,6 +6,7 @@ scriptencoding utf-8
 " Path to python file that scrapes search data from philpapers.org
 let s:pythonPath = expand('<sfile>:p:h:h')
 let s:ppSearchPath = s:pythonPath . '/python/ppsearch.py'
+let s:ppScrapeBibtexPath = s:pythonPath . '/python/ppscrapebibtex.py'
 
 " Note: J-Stor seems to require a real web browser. I'm working around
 " this by spoofing headers with s:curlOpt. (Adding this into DOI/PP/URL
@@ -178,9 +179,9 @@ function! bibsearch#GetBibTeX() abort  "{{{
     elseif l:ppLine > 0 && l:ppLine < l:nextItem
         let l:abstract = s:getAbstract(l:ppLine - 1)
         let l:ppUrl = getline(l:ppLine)[9:-2]
-        let l:text = system('curl ' . s:curlOpt . ' "' . l:ppUrl . '"')
-        let l:text = substitute(l:text, '\_.*<meta name="citation_format_bib" content="\(@\_.*\)\n">\_.*', '\1', '')
-        call s:DisplayBibTeX(l:text, l:abstract)
+        let l:ppID = matchstr(l:ppUrl, '\/\zs[^/]*$')  " Get the philpapers ID
+        let l:bibtex = system('/usr/bin/env python3 "' . s:ppScrapeBibtexPath . '" ' . l:ppID)
+        call s:DisplayBibTeX(l:bibtex, l:abstract)
     elseif l:urlLine > 0 && l:urlLine < l:nextItem
         let l:url = getline(l:urlLine)[10:-2]
         let l:url = substitute(l:url, '%3f', '?', 'g')
@@ -188,12 +189,6 @@ function! bibsearch#GetBibTeX() abort  "{{{
         let l:url = substitute(l:url, '%26', '\&', 'g')
         let l:url = substitute(l:url, '%', '\\%', 'g')
         execute('silent !open "' . l:url . '"')
-    elseif l:ppidLine > 0 && l:ppidLine < l:nextItem
-        let l:ppid = getline(l:ppidLine)[11:]
-        let l:abstract = s:getAbstract(l:ppidLine - 1)
-        let l:text = system('curl ' . s:curlOpt . ' "https://philpapers.org/export.html?__format=bib&eIds=' . l:ppid . '&formatName=BibTeX"')
-        let l:text = substitute(l:text, '.*<pre class="export">\(@.*\)\n</pre>\_.*', '\1', '')
-        call s:DisplayBibTeX(l:text, l:abstract)
     else
         echohl WarningMsg
         echo 'No data found. Trying Citoid ...'
