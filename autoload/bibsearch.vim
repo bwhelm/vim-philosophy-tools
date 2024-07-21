@@ -157,7 +157,7 @@ function! bibsearch#GetBibTeX() abort  "{{{
     let l:nextItem = search('^\d\+\.\s', 'Wn')
     silent! -2
     if l:nextItem == 0
-        let l:nextItem = 9999
+        let l:nextItem = 99999
     endif
     let l:jstorLine = search('^    J-STOR:', 'Wn')
     let l:doiLine = search('^    DOI:', 'Wn')
@@ -179,7 +179,7 @@ function! bibsearch#GetBibTeX() abort  "{{{
     elseif l:ppLine > 0 && l:ppLine < l:nextItem
         let l:abstract = s:getAbstract(l:ppLine - 1)
         let l:ppUrl = getline(l:ppLine)[9:-2]
-        let l:ppID = matchstr(l:ppUrl, '\/\zs[^/]*$')  " Get the philpapers ID
+        let l:ppID = matchstr(l:ppUrl, '[^/]*$')  " Get the philpapers ID
         let l:bibtex = system('/usr/bin/env python3 "' . s:ppScrapeBibtexPath . '" ' . l:ppID)
         call s:DisplayBibTeX(l:bibtex, l:abstract)
     elseif l:urlLine > 0 && l:urlLine < l:nextItem

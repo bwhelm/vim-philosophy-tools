@@ -23,5 +23,5 @@ headers = {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5)",
 page = get(pageUrl, headers=headers)
 soup = bs(page.text, 'html.parser')
 list = soup.find(id="exported")
-text = list.find("pre").text
+text = list.find("pre").text[:-1]  # chop off extra '\n'
 print(text)
