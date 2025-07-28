@@ -181,7 +181,16 @@ function! bibsearch#GetBibTeX() abort  "{{{
         let l:ppUrl = getline(l:ppLine)[9:-2]
         let l:ppID = matchstr(l:ppUrl, '[^/]*$')  " Get the philpapers ID
         let l:bibtex = system('/usr/bin/env python3 "' . s:ppScrapeBibtexPath . '" ' . l:ppID)
-        call s:DisplayBibTeX(l:bibtex, l:abstract)
+        if l:bibtex =~ "^Traceback"
+            " If cannot download webpage, open it manually
+            silent execute "!open 'https://philpapers.org/export.html?expformat=bib&eIds=" . l:ppID . "&formatName=BibTeX'"
+            call s:DisplayBibTeX("", "")
+            echohl WarningMsg
+            echo "Cannot scrape webpage; opening manually..."
+            echohl None
+        else
+            call s:DisplayBibTeX(l:bibtex, l:abstract)
+        endif
     elseif l:urlLine > 0 && l:urlLine < l:nextItem
         let l:url = getline(l:urlLine)[10:-2]
         let l:url = substitute(l:url, '%3f', '?', 'g')
